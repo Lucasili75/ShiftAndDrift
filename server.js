@@ -80,7 +80,11 @@ app.get('/check-and-notify', async (req, res) => {
       if (token) {
         return admin.messaging().send({
           token,
-          notification
+          data: {
+            title: notification.title,
+            body: notification.body,
+            target: notification.target
+          }
         });
       }
     }
