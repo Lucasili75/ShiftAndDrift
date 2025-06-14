@@ -16,18 +16,22 @@ const notificationMessages = {
   rolling: {
     title: 'Preparazione gara!',
     body: 'La gara sta per cominciare, determinazione griglia di partenza!',
+    target: 'prepare',
   },
   started: {
     title: 'La gara è iniziata!',
     body: 'Dai il massimo in pista!',
+    target: 'game',
   },
   finished: {
     title: 'Gara conclusa',
     body: 'Scopri la classifica finale!',
+    target: 'endgame',
   },
   default: {
     title: 'Aggiornamento gioco',
     body: 'C’è un aggiornamento sul tuo gioco!',
+    target: 'default',
   }
 };
 
