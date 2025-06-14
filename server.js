@@ -11,44 +11,65 @@ admin.initializeApp({
   databaseURL: "https://shiftanddrift-c3fd6-default-rtdb.europe-west1.firebasedatabase.app"
 });
 
+// Mappa degli stati del gioco -> testo della notifica
+const notificationMessages = {
+  rolling: {
+    title: 'Preparazione gara!',
+    body: 'La gara sta per cominciare, determinazione griglia di partenza!',
+  },
+  racing: {
+    title: 'La gara è iniziata!',
+    body: 'Dai il massimo in pista!',
+  },
+  finished: {
+    title: 'Gara conclusa',
+    body: 'Scopri la classifica finale!',
+  },
+  // Stato di default se non specificato
+  default: {
+    title: 'Aggiornamento gioco',
+    body: 'C’è un aggiornamento sul tuo gioco!',
+  }
+};
+
 app.get('/check-and-notify', async (req, res) => {
+  const gameCode = req.query.gameCode;
+  if (!gameCode) {
+    return res.status(400).send('Parametro gameCode mancante');
+  }
+
   const db = admin.database();
-  const gamesSnap = await db.ref('games').once('value');
-  const messages = [];
+  const gameSnap = await db.ref(`games/${gameCode}`).once('value');
 
-  gamesSnap.forEach((gameSnap) => {
-    const game = gameSnap.val();
-    const gameCode = gameSnap.key;
+  if (!gameSnap.exists()) {
+    return res.status(404).send('Gioco non trovato');
+  }
 
-    if (game.status === 'rolling') {
-      const players = game.players || {};
-      for (const uid in players) {
-        const player = players[uid];
-        if (!player.isBot && (!player.roll || player.roll < 0)) {
-          messages.push(
-            db.ref(`/tokens/${uid}`).once('value').then((tokenSnap) => {
-              const token = tokenSnap.val();
-              if (token) {
-                return admin.messaging().send({
-                  token,
-                  notification: {
-                    title: 'Preparazione gara!',
-                    body: 'La gara sta per cominciare, determinazione griglia di partenza!',
-                  },
-                });
-              }
-              return null;
-            })
-          );
-        }
+  const game = gameSnap.val();
+  const players = game.players || {};
+  const status = game.status || 'default';
+
+  const notification = notificationMessages[status] || notificationMessages.default;
+
+  const messages = Object.entries(players).map(async ([uid, player]) => {
+    if (!player.isBot) {
+      const tokenSnap = await db.ref(`/tokens/${uid}`).once('value');
+      const token = tokenSnap.val();
+      if (token) {
+        return admin.messaging().send({
+          token,
+          notification
+        });
       }
     }
+    return null;
   });
 
   await Promise.all(messages);
-  res.send('Notifiche inviate (se presenti).');
+  res.send(`Notifiche inviate per il gioco ${gameCode} (${status}).`);
 });
 
 app.listen(port, () => {
   console.log(`FCM Server listening on port ${port}`);
 });
+
