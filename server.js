@@ -39,6 +39,7 @@ app.get('/check-and-notify', async (req, res) => {
   const gameCode = req.query.gameCode;
   const fun = req.query.fun;
   const player = req.query.player;
+  const senderUid = req.query.senderUid;
 
   if (!gameCode) {
     return res.status(400).send('Parametro gameCode mancante');
@@ -75,7 +76,7 @@ app.get('/check-and-notify', async (req, res) => {
   }
 
   const messages = Object.entries(players).map(async ([uid, p]) => {
-    if (!p.isBot) {
+    if (!p.isBot && uid !== senderUid) {
       const tokenSnap = await db.ref(`/tokens/${uid}`).once('value');
       const token = tokenSnap.val();
       if (token) {
