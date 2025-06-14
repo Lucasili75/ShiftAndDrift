@@ -83,7 +83,8 @@ app.get('/check-and-notify', async (req, res) => {
           data: {
             title: notification.title,
             body: notification.body,
-            target: notification.target
+            target: notification.target,
+            gameCode: gameCode
           }
         });
       }
