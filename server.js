@@ -25,7 +25,6 @@ const notificationMessages = {
     title: 'Gara conclusa',
     body: 'Scopri la classifica finale!',
   },
-  // Stato di default se non specificato
   default: {
     title: 'Aggiornamento gioco',
     body: 'C’è un aggiornamento sul tuo gioco!',
@@ -35,7 +34,8 @@ const notificationMessages = {
 app.get('/check-and-notify', async (req, res) => {
   const gameCode = req.query.gameCode;
   const fun = req.query.fun;
-  const player = req.query.player;
+  const playerName = req.query.player;
+
   if (!gameCode) {
     return res.status(400).send('Parametro gameCode mancante');
   }
@@ -51,7 +51,16 @@ app.get('/check-and-notify', async (req, res) => {
   const players = game.players || {};
   const status = game.status || 'default';
 
-  const notification = notificationMessages[status] || notificationMessages.default;
+  // Notifica: se fun=newPlayer -> messaggio personalizzato
+  let notification;
+  if (fun === 'newPlayer' && playerName) {
+    notification = {
+      title: 'Nuovo pilota in gara!',
+      body: `${playerName} si è aggiunto alla gara!`
+    };
+  } else {
+    notification = notificationMessages[status] || notificationMessages.default;
+  }
 
   const messages = Object.entries(players).map(async ([uid, player]) => {
     if (!player.isBot) {
@@ -68,10 +77,11 @@ app.get('/check-and-notify', async (req, res) => {
   });
 
   await Promise.all(messages);
-  res.send(`Notifiche inviate per il gioco ${gameCode} (${status}).`);
+  res.send(`Notifiche inviate per il gioco ${gameCode} (${status}${fun === 'newPlayer' ? ', newPlayer' : ''}).`);
 });
 
 app.listen(port, () => {
   console.log(`FCM Server listening on port ${port}`);
 });
+
 
