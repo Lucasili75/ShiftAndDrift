@@ -34,6 +34,8 @@ const notificationMessages = {
 
 app.get('/check-and-notify', async (req, res) => {
   const gameCode = req.query.gameCode;
+  const fun = req.query.fun;
+  const player = req.query.player;
   if (!gameCode) {
     return res.status(400).send('Parametro gameCode mancante');
   }
