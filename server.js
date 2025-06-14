@@ -4,41 +4,41 @@ const admin = require('firebase-admin');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Initialize Firebase Admin SDK from env variable
+// Initialize Firebase Admin SDK
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://shiftanddrift-c3fd6-default-rtdb.europe-west1.firebasedatabase.app"
 });
 
-// Mappa degli stati del gioco -> testo della notifica
+// Messaggi di notifica associati allo stato del gioco
 const notificationMessages = {
   rolling: {
     title: 'Preparazione gara!',
     body: 'La gara sta per cominciare, determinazione griglia di partenza!',
-    target: 'prepare'
+    click_action: 'ROLLING_ACTIVITY'
   },
   started: {
     title: 'La gara è iniziata!',
     body: 'Dai il massimo in pista!',
-    target: 'game'
+    click_action: 'GAME_ACTIVITY'
   },
   finished: {
     title: 'Gara conclusa',
     body: 'Scopri la classifica finale!',
-    target: 'endgame'
+    click_action: 'SUMMARY_ACTIVITY'
   },
   default: {
     title: 'Aggiornamento gioco',
     body: 'C’è un aggiornamento sul tuo gioco!',
-    target: 'default'
+    click_action: 'MAIN_ACTIVITY'
   }
 };
 
 app.get('/check-and-notify', async (req, res) => {
   const gameCode = req.query.gameCode;
   const fun = req.query.fun;
-  const playerName = req.query.player;
+  const player = req.query.player;
 
   if (!gameCode) {
     return res.status(400).send('Parametro gameCode mancante');
@@ -55,36 +55,42 @@ app.get('/check-and-notify', async (req, res) => {
   const players = game.players || {};
   const status = game.status || 'default';
 
-  // Notifica: se fun=newPlayer -> messaggio personalizzato
-  let notification;
-  if (fun === 'newPlayer' && playerName) {
+  // Determina messaggio da inviare
+  let notification = notificationMessages[status] || notificationMessages.default;
+
+  // Se funzione è "newPlayer", personalizza la notifica
+  if (fun === 'newPlayer' && player) {
     notification = {
-      title: 'Nuovo pilota in gara!',
-      body: `${playerName} si è aggiunto alla gara!`
+      title: 'Nuovo giocatore!',
+      body: `${player} si è aggiunto alla gara`,
+      click_action: 'LOBBY_ACTIVITY'
     };
-  } else {
-      if (fun === 'deletePlayer' && playerName) {
-      notification = {
-        title: 'Pilota uscito!',
-        body: `${playerName} ha abbandonato la gara!`
-      };
-    } else {
-      notification = notificationMessages[status] || notificationMessages.default;
-    }
+  }
+  if (fun === 'deletePlayer' && player) {
+    notification = {
+      title: 'Giocatore uscito!',
+      body: `${player} ha abbandonato la gara`,
+      click_action: 'LOBBY_ACTIVITY'
+    };
   }
 
-  const messages = Object.entries(players).map(async ([uid, player]) => {
-    if (!player.isBot) {
+  const messages = Object.entries(players).map(async ([uid, p]) => {
+    if (!p.isBot) {
       const tokenSnap = await db.ref(`/tokens/${uid}`).once('value');
       const token = tokenSnap.val();
       if (token) {
         return admin.messaging().send({
           token,
-          data: {
+          notification: {
             title: notification.title,
             body: notification.body,
-            target: notification.target,
-            gameCode: gameCode
+            click_action: notification.click_action
+          },
+          data: {
+            gameCode,
+            target: notification.click_action,
+            fun: fun || '',
+            player: player || ''
           }
         });
       }
@@ -93,11 +99,12 @@ app.get('/check-and-notify', async (req, res) => {
   });
 
   await Promise.all(messages);
-  res.send(`Notifiche inviate per il gioco ${gameCode} (${status}${fun === 'newPlayer' ? ', newPlayer' : ''}).`);
+  res.send(`Notifiche inviate per il gioco ${gameCode} (${status}).`);
 });
 
 app.listen(port, () => {
   console.log(`FCM Server listening on port ${port}`);
 });
+
 
 
