@@ -59,7 +59,14 @@ app.get('/check-and-notify', async (req, res) => {
       body: `${playerName} si è aggiunto alla gara!`
     };
   } else {
-    notification = notificationMessages[status] || notificationMessages.default;
+      if (fun === 'deletePlayer' && playerName) {
+      notification = {
+        title: 'Pilota uscito!',
+        body: `${playerName} ha abbandonato la gara!`
+      };
+    } else {
+      notification = notificationMessages[status] || notificationMessages.default;
+    }
   }
 
   const messages = Object.entries(players).map(async ([uid, player]) => {
