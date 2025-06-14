@@ -89,7 +89,8 @@ app.get('/check-and-notify', async (req, res) => {
             gameCode,
             target: notification.click_action,
             fun: fun || '',
-            player: player || ''
+            player: player || '',
+            click_action: notification.click_action
           }
         });
       }
