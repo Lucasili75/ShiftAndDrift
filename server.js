@@ -17,7 +17,7 @@ const notificationMessages = {
     title: 'Preparazione gara!',
     body: 'La gara sta per cominciare, determinazione griglia di partenza!',
   },
-  racing: {
+  started: {
     title: 'La gara è iniziata!',
     body: 'Dai il massimo in pista!',
   },
