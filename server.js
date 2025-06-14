@@ -32,8 +32,8 @@ app.get('/check-and-notify', async (req, res) => {
                 return admin.messaging().send({
                   token,
                   notification: {
-                    title: 'È il tuo turno!',
-                    body: 'Tira il dado per la griglia di partenza!',
+                    title: 'Preparazione gara!',
+                    body: 'La gara sta per cominciare, determinazione griglia di partenza!',
                   },
                 });
               }
