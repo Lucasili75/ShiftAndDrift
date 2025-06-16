@@ -15,27 +15,27 @@ admin.initializeApp({
 const notificationMessages = {
   rolling: {
     title: 'Preparazione gara!',
-    body: 'La gara sta per cominciare, determinazione griglia di partenza!#ROLLING_ACTIVITY',
+    body: 'La gara sta per cominciare, determinazione griglia di partenza!',
     click_action: 'ROLLING_ACTIVITY'
   },
   waiting: {
     title: 'In attesa!',
-    body: 'Organizzazione gara, attesa partecipanti!#WAIT_ACTIVITY',
+    body: 'Organizzazione gara, attesa partecipanti!',
     click_action: 'WAIT_ACTIVITY'
   },
   started: {
     title: 'La gara è iniziata!',
-    body: 'Dai il massimo in pista!#GAME_ACTIVITY',
+    body: 'Dai il massimo in pista!',
     click_action: 'GAME_ACTIVITY'
   },
   finished: {
     title: 'Gara conclusa',
-    body: 'Scopri la classifica finale!#SUMMARY_ACTIVITY',
+    body: 'Scopri la classifica finale!',
     click_action: 'SUMMARY_ACTIVITY'
   },
   default: {
     title: 'Aggiornamento gioco',
-    body: 'C’è un aggiornamento sul tuo gioco!#MAIN_ACTIVITY',
+    body: 'C’è un aggiornamento sul tuo gioco!',
     click_action: 'MAIN_ACTIVITY'
   }
 };
@@ -69,14 +69,14 @@ app.get('/check-and-notify', async (req, res) => {
   if (fun === 'newPlayer' && player) {
     notification = {
       title: 'Nuovo giocatore!',
-      body: `${player} si è aggiunto alla gara#GAME_ACTIVITY`,
+      body: `${player} si è aggiunto alla gara`,
       click_action: 'GAME_ACTIVITY'
     };
   }
   if (fun === 'deletePlayer' && player) {
     notification = {
       title: 'Giocatore uscito!',
-      body: `${player} ha abbandonato la gara#GAME_ACTIVITY`,
+      body: `${player} ha abbandonato la gara`,
       click_action: 'GAME_ACTIVITY'
     };
   }
@@ -93,7 +93,7 @@ app.get('/check-and-notify', async (req, res) => {
             },
             notification:{
               title: notification.title,
-              body: notification.body,
+              body: notification.body+"#"+notification.click_action,
             }
             /*data: {
               title: notification.title,
