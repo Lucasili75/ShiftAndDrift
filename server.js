@@ -104,7 +104,7 @@ app.get('/check-and-notify', async (req, res) => {
 
   await Promise.all(messages);
   res.send(`Notifiche inviate per il gioco ${gameCode} (${status}).`);
-  console.log(Notifiche inviate per il gioco ${gameCode} (${status}).`);
+  console.log(`Notifiche inviate per il gioco ${gameCode} (${status}).`);
 });
 
 app.listen(port, () => {
