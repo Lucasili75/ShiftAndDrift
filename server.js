@@ -85,18 +85,31 @@ app.get('/check-and-notify', async (req, res) => {
       const tokenSnap = await db.ref(`/tokens/${uid}`).once('value');
       const token = tokenSnap.val();
       if (token) {
-        return admin.messaging().send({
-          token,
-          notification: {
-            title: notification.title,
-            body: notification.body
-          },
-          data: {
-            gameCode,
-            target: notification.click_action,
-            click_action: notification.click_action
-          }
-        });
+        const message = {
+            token,
+            notification: {
+              title: notification.title,
+              body: notification.body
+            },
+            data: {
+              gameCode,
+              target: notification.click_action,
+              click_action: notification.click_action
+            }
+          };
+          
+          console.log(`📤 Inviando notifica a UID: ${uid} | Token: ${token}`);
+          console.log(`   Titolo: ${message.notification.title}`);
+          console.log(`   Corpo: ${message.notification.body}`);
+          console.log(`   Click Action: ${message.data.click_action}`);
+          
+          return admin.messaging().send(message)
+            .then(response => {
+              console.log(`✅ Notifica inviata con successo a ${uid}: ${response}`);
+            })
+            .catch(error => {
+              console.error(`❌ Errore invio notifica a ${uid}:`, error);
+            });
       }
     }
     return null;
