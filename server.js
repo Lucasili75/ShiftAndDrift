@@ -102,8 +102,8 @@ app.get('/check-and-notify', async (req, res) => {
           };
           
           console.log(`📤 Inviando notifica a UID: ${uid} | Token: ${token}`);
-          console.log(`   Titolo: ${message.data.title}`);
-          console.log(`   Corpo: ${message.data.body}`);
+          console.log(`   Titolo: ${message.notification.title}`);
+          console.log(`   Corpo: ${message.notification.body}`);
           console.log(`   Click Action: ${message.data.click_action}`);
           
           return admin.messaging().send(message)
