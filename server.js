@@ -18,6 +18,11 @@ const notificationMessages = {
     body: 'La gara sta per cominciare, determinazione griglia di partenza!',
     click_action: 'ROLLING_ACTIVITY'
   },
+  waiting: {
+    title: 'In attesa!',
+    body: 'Organizzazione gara, attesa partecipanti!',
+    click_action: 'WAIT_ACTIVITY'
+  },
   started: {
     title: 'La gara è iniziata!',
     body: 'Dai il massimo in pista!',
