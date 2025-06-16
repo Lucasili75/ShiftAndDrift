@@ -88,6 +88,7 @@ app.get('/check-and-notify', async (req, res) => {
       if (token) {
         const message = {
             token,
+          priority: "high",
           notification:{
             title: notification.title,
               body: notification.body,
