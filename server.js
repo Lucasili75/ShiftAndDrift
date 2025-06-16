@@ -15,27 +15,27 @@ admin.initializeApp({
 const notificationMessages = {
   rolling: {
     title: 'Preparazione gara!',
-    body: 'La gara sta per cominciare, determinazione griglia di partenza!',
+    body: 'La gara sta per cominciare, determinazione griglia di partenza!#ROLLING_ACTIVITY',
     click_action: 'ROLLING_ACTIVITY'
   },
   waiting: {
     title: 'In attesa!',
-    body: 'Organizzazione gara, attesa partecipanti!',
+    body: 'Organizzazione gara, attesa partecipanti!#WAIT_ACTIVITY',
     click_action: 'WAIT_ACTIVITY'
   },
   started: {
     title: 'La gara è iniziata!',
-    body: 'Dai il massimo in pista!',
+    body: 'Dai il massimo in pista!#GAME_ACTIVITY',
     click_action: 'GAME_ACTIVITY'
   },
   finished: {
     title: 'Gara conclusa',
-    body: 'Scopri la classifica finale!',
+    body: 'Scopri la classifica finale!#SUMMARY_ACTIVITY',
     click_action: 'SUMMARY_ACTIVITY'
   },
   default: {
     title: 'Aggiornamento gioco',
-    body: 'C’è un aggiornamento sul tuo gioco!',
+    body: 'C’è un aggiornamento sul tuo gioco!#MAIN_ACTIVITY',
     click_action: 'MAIN_ACTIVITY'
   }
 };
@@ -69,14 +69,14 @@ app.get('/check-and-notify', async (req, res) => {
   if (fun === 'newPlayer' && player) {
     notification = {
       title: 'Nuovo giocatore!',
-      body: `${player} si è aggiunto alla gara`,
+      body: `${player} si è aggiunto alla gara#GAME_ACTIVITY`,
       click_action: 'GAME_ACTIVITY'
     };
   }
   if (fun === 'deletePlayer' && player) {
     notification = {
       title: 'Giocatore uscito!',
-      body: `${player} ha abbandonato la gara`,
+      body: `${player} ha abbandonato la gara#GAME_ACTIVITY`,
       click_action: 'GAME_ACTIVITY'
     };
   }
