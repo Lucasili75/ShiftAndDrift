@@ -88,11 +88,9 @@ app.get('/check-and-notify', async (req, res) => {
       if (token) {
         const message = {
             token,
-            notification: {
-              title: notification.title,
-              body: notification.body
-            },
             data: {
+              title: notification.title,
+              body: notification.body,
               gameCode,
               target: notification.click_action,
               click_action: notification.click_action
