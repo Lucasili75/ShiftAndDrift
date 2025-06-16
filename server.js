@@ -94,7 +94,7 @@ app.get('/check-and-notify', async (req, res) => {
             notification:{
               title: notification.title,
               body: notification.body//+"#"+notification.click_action,
-            }
+            },
             data: {
               title: notification.title,
               body: notification.body,
