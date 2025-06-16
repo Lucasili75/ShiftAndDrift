@@ -45,7 +45,8 @@ app.get('/check-and-notify', async (req, res) => {
   const fun = req.query.fun;
   const player = req.query.player;
   const senderUid = req.query.senderUid;
-
+  console.log(`Chiamata da ${senderUid}: ${gameCode}, ${fun}`);
+  
   if (!gameCode) {
     return res.status(400).send('Parametro gameCode mancante');
   }
