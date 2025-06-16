@@ -69,22 +69,14 @@ app.get('/check-and-notify', async (req, res) => {
     notification = {
       title: 'Nuovo giocatore!',
       body: `${player} si è aggiunto alla gara`,
-    },
-    data: {
-      gameCode,
-      target: 'WAIT_ACTIVITY',
-      click_action: 'WAIT_ACTIVITY'
+      click_action: 'GAME_ACTIVITY'
     };
   }
   if (fun === 'deletePlayer' && player) {
     notification = {
       title: 'Giocatore uscito!',
       body: `${player} ha abbandonato la gara`,
-    },
-    data: {
-      gameCode,
-      target: 'WAIT_ACTIVITY',
-      click_action: 'WAIT_ACTIVITY'
+      click_action: 'GAME_ACTIVITY'
     };
   }
 
