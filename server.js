@@ -93,15 +93,15 @@ app.get('/check-and-notify', async (req, res) => {
             },
             notification:{
               title: notification.title,
-              body: notification.body+"#"+notification.click_action,
+              body: notification.body//+"#"+notification.click_action,
             }
-            /*data: {
+            data: {
               title: notification.title,
               body: notification.body,
               gameCode,
               target: notification.click_action,
-              click_action: notification.click_action
-            }*/
+              click_action: notification.click_action,
+            }
           };
           
           console.log(`📤 Inviando notifica a UID: ${uid} | Token: ${token}`);
