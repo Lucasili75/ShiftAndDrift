@@ -89,7 +89,8 @@ app.get('/check-and-notify', async (req, res) => {
             token,
             notification: {
               title: notification.title,
-              body: notification.body
+              body: notification.body,
+              click_action: notification.click_action
             },
             data: {
               gameCode,
