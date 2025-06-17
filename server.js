@@ -45,6 +45,7 @@ app.get('/check-and-notify', async (req, res) => {
   const fun = req.query.fun;
   const player = req.query.player;
   const senderUid = req.query.senderUid;
+  const toUid = req.query.toUid;
   console.log(`Chiamata da ${senderUid}: ${gameCode}, ${fun}`);
   
   if (!gameCode) {
@@ -80,9 +81,16 @@ app.get('/check-and-notify', async (req, res) => {
       click_action: 'WAIT_ACTIVITY'
     };
   }
+  if (fun === 'rollToGrid' && toUid) {
+    notification = {
+      title: 'Tocca a te!',
+      body: `E' il tuo turno di tirare!`,
+      click_action: 'WAIT_ACTIVITY'
+    };
+  }
 
   const messages = Object.entries(players).map(async ([uid, p]) => {
-    if (!p.isBot && uid !== senderUid) {
+    if (!p.isBot && ((uid !== senderUid)||(toUid&&(uid==toUid))) {
       const tokenSnap = await db.ref(`/tokens/${uid}`).once('value');
       const token = tokenSnap.val();
       if (token) {
