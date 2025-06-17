@@ -90,7 +90,7 @@ app.get('/check-and-notify', async (req, res) => {
   }
 
   const messages = Object.entries(players).map(async ([uid, p]) => {
-    if (!p.isBot && ((uid !== senderUid)||(toUid&&(uid==toUid))) {
+    if (!p.isBot && ((uid !== senderUid)||(toUid&&(uid==toUid)))) {
       const tokenSnap = await db.ref(`/tokens/${uid}`).once('value');
       const token = tokenSnap.val();
       if (token) {
