@@ -85,7 +85,7 @@ app.get('/check-and-notify', async (req, res) => {
     notification = {
       title: 'Tocca a te!',
       body: `E' il tuo turno di tirare!`,
-      click_action: 'WAIT_ACTIVITY'
+      click_action: 'ROLLING_ACTIVITY'
     };
   }
 
