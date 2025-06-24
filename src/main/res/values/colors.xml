@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="status_waiting">#00A0FF</color>
+    <color name="status_rolling">#FFA000</color>
+    <color name="status_started">#388E3C</color>
+    <color name="status_finished">#D32F2F</color>
+    <color name="front_wing_color">#FF0000</color>
+    <color name="cockpit_front_color">#00FF00</color>
+    <color name="cockpit_rear_color">#0000FF</color>
+    <color name="rear_wing_color">#FFFF00</color>
+    <color name="red">#FF0000</color>
+</resources>

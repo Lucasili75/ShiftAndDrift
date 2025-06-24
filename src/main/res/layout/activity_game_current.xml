@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Immagine zoomabile con altezza massima -->
+    <FrameLayout
+        android:id="@+id/mapContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/playerCardContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.gepinfo.shiftanddrift.ZoomableImageView
+            android:id="@+id/imageViewTrack"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="matrix"
+            android:src="@drawable/fde_background" />
+
+        <com.gepinfo.shiftanddrift.GameBoardOverlay
+            android:id="@+id/overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <!-- Spazio riservato per scheda giocatore e controlli -->
+    <LinearLayout
+        android:id="@+id/playerCardContainer"
+        android:layout_width="0dp"
+        android:layout_height="220dp"
+        android:orientation="vertical"
+        android:background="#FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/textPlayerName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="5dp"
+            android:text="@string/giocatore"
+            android:textSize="18sp" />
+            <TextView
+                android:id="@+id/textPlayerLap"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_marginEnd="5dp"
+                android:text="@string/giro"
+                android:textSize="18sp" />
+        </RelativeLayout>
+        <!-- Marce con evidenziazione dinamica -->
+        <FrameLayout
+            android:id="@+id/gearContainer"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginBottom="2dp">
+
+            <ImageView
+                android:id="@+id/imageGears"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/cambio2"
+                android:scaleType="fitCenter" />
+
+            <!-- Rettangolo evidenziato (visibile dinamicamente) -->
+            <View
+                android:id="@+id/gearHighlight"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="start"
+                android:background="@drawable/gear_highlight_border"
+                android:visibility="invisible"/>
+        </FrameLayout>
+
+        <!-- Indicatori -->
+        <RelativeLayout
+            android:id="@+id/statusIndicators"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_margin="3dp"
+            android:weightSum="5">
+
+            <ImageView
+                android:id="@+id/imageDice"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/dado_nero"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:scaleType="fitCenter" />
+            <LinearLayout
+                android:id="@+id/tiresIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_alignParentStart="true"
+                android:paddingVertical="4dp">
+
+                <!-- Icona -->
+                <ImageView
+                    android:id="@+id/iconTires"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/tire"
+                    android:layout_marginEnd="8dp" />
+
+                <!-- Container caselle -->
+                <LinearLayout
+                    android:id="@+id/tireBoxes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/brakeIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/tiresIndicator"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="4dp">
+
+                <!-- Icona -->
+                <ImageView
+                    android:id="@+id/iconBrakes"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/brake"
+                    android:layout_marginEnd="8dp" />
+
+                <!-- Container caselle -->
+                <LinearLayout
+                    android:id="@+id/brakeBoxes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/fuelIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/brakeIndicator"
+                android:paddingVertical="4dp">
+
+                <!-- Icona -->
+                <ImageView
+                    android:id="@+id/iconFuels"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/fuel"
+                    android:layout_marginEnd="8dp" />
+
+                <!-- Container caselle -->
+                <LinearLayout
+                    android:id="@+id/fuelBoxes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/bodyIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="4dp">
+
+                <!-- Icona -->
+                <ImageView
+                    android:id="@+id/iconBody"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/body"
+                    android:layout_marginEnd="8dp" />
+
+                <!-- Container caselle -->
+                <LinearLayout
+                    android:id="@+id/bodyBoxes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/engineIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_alignParentEnd="true"
+                android:layout_below="@+id/bodyIndicator"
+                android:paddingVertical="4dp">
+
+                <!-- Icona -->
+                <ImageView
+                    android:id="@+id/iconEngine"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/engine"
+                    android:layout_marginEnd="8dp" />
+
+                <!-- Container caselle -->
+                <LinearLayout
+                    android:id="@+id/engineBoxes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/textPlayerCurveStops"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_below="@+id/engineIndicator"
+                android:layout_marginEnd="5dp"
+                android:paddingVertical="4dp"
+                android:text="@string/stops"
+                android:textSize="18sp" />
+        </RelativeLayout>
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
+

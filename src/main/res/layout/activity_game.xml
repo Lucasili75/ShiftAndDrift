@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="6dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:padding="5dp">
+
+        <TextView
+            android:id="@+id/textGameName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:text="@string/gara"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/textGameStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textGameName"
+            android:text="@string/stato"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="16sp"
+            android:textStyle="italic" />
+
+        <TextView
+            android:id="@+id/textPlayerName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:text="@string/giocatore"
+            android:textSize="18sp" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:padding="5dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pista_selezionata"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/textGameTrack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/nessuna_pista_selezionata"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/buttonSelectTrack"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/border_imagebutton"
+            android:scaleType="fitCenter"
+            android:src="@drawable/sel_track"
+            android:text="@string/seleziona_pista" />
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="5dp"
+        android:text="@string/giocatori_nella_gara"
+        android:textSize="18sp" />
+
+    <ListView
+        android:id="@+id/listViewPlayers"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/buttonAddBot"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/border_imagebutton"
+            android:scaleType="fitCenter"
+            android:src="@drawable/bot_add"
+            android:layout_margin="5dp" />
+
+        <ImageButton
+            android:id="@+id/buttonStartGame"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_margin="5dp"
+            android:background="@drawable/border_imagebutton"
+            android:layout_toEndOf="@id/buttonAddBot"
+            android:scaleType="fitCenter"
+            android:src="@drawable/starting_grid" />
+        <ImageButton
+            android:id="@+id/buttonLeaveGame"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_margin="5dp"
+            android:background="@drawable/border_imagebutton"
+            android:layout_alignParentEnd="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/exit_icon" />
+        <ImageButton
+            android:id="@+id/buttonToGamesLobbyActivity"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_margin="5dp"
+            android:background="@drawable/border_imagebutton"
+            android:layout_toStartOf="@id/buttonLeaveGame"
+            android:scaleType="fitCenter"
+            android:src="@drawable/baseline_format_list_bulleted_24" />
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/buttonEndGame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="5dp"
+        android:text="@string/termina_gara"
+        android:visibility="gone" />
+
+</LinearLayout>
