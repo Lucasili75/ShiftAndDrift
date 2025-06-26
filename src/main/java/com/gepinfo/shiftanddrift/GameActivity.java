@@ -4,7 +4,6 @@ import static com.gepinfo.shiftanddrift.PlayerClass.colorNames;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -45,11 +44,11 @@ public class GameActivity extends AppCompatActivity {
     private boolean isHost = false;
 
     private String gameCode, status;
-    GamesManager gamesManager;
+    DbManager dbManager;
     private String trackName;
-    GameClass thisGame=new GameClass();
+    GameClass thisGame = new GameClass();
 
-//    private List<PlayerClass> playerList = new ArrayList<>();
+    //    private List<PlayerClass> playerList = new ArrayList<>();
     private PlayerListAdapter playerAdapter;
 
     List<String> usedBotNames = new ArrayList<>();
@@ -76,7 +75,7 @@ public class GameActivity extends AppCompatActivity {
         buttonSelectTrack.setOnClickListener(v -> selectTrack());
 
         gameCode = getIntent().getStringExtra("gameCode");
-        gamesManager = new GamesManager(this, gameCode);
+        dbManager = new DbManager(this, gameCode);
         MainActivity.gamePrefs = getSharedPreferences("ShiftAndDriftPrefs", MODE_PRIVATE);
         MainActivity.loadParms();
         textPlayerName.setText(getString(R.string.giocatore) + MainActivity.playerName);
@@ -94,22 +93,17 @@ public class GameActivity extends AppCompatActivity {
                     }
                     // Controlla se sei l’host
                     isHost = thisGame.getHost().equals(MyApplication.getUid());
-                    //playerList.addAll(thisGame.getPlayersList());
                     for (PlayerClass player : thisGame.getPlayersList()) {
-                        /*if (player.uid.equals(MyApplication.getUid()))
-                            gamesManager.setMyPlayer(player);*/
                         if (player.isBot()) usedBotNames.add(player.getName());
                     }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        thisGame.getPlayersList().sort(Comparator.comparing(player -> player.name));
-                        thisGame.updatePlayerMapFromArrayList();
-                    }
+                    thisGame.getPlayersList().sort(Comparator.comparing(player -> player.name));
+                    thisGame.updatePlayerMapFromArrayList();
                     playerAdapter = new PlayerListAdapter(GameActivity.this, thisGame.getPlayersList());
                     listViewPlayers.setAdapter(playerAdapter);
                     playerAdapter.notifyDataSetChanged();
 
                     trackName = thisGame.getTrack();
-                    if ((trackName != null)&&(!trackName.isEmpty())) {
+                    if ((trackName != null) && (!trackName.isEmpty())) {
                         textTrackName.setText(trackName);
                         textTrackName.setTextColor(Color.BLACK);
                     } else {
@@ -158,11 +152,11 @@ public class GameActivity extends AppCompatActivity {
             }
         };
 
-        gamesManager.listenToGame(eventListener);
+        dbManager.listenToGame(eventListener);
 
         buttonLeaveGame.setOnClickListener(v -> leaveGame());
         buttonStartGame.setOnClickListener(v -> {
-            if ((trackName != null)&&(!trackName.isEmpty())) continueGame();
+            if ((trackName != null) && (!trackName.isEmpty())) continueGame();
         });
 
         buttonEndGame.setOnClickListener(v -> {
@@ -180,7 +174,7 @@ public class GameActivity extends AppCompatActivity {
                     .setMessage("Vuoi eliminare " + selected.name + "?")
                     .setPositiveButton("Sì", (dialog, which) -> {
                         thisGame.getPlayers().remove(selected.uid);
-                        gamesManager.updateGame(thisGame);
+                        dbManager.updateGame(thisGame);
                     })
                     .setNegativeButton("No", null)
                     .show();
@@ -196,9 +190,8 @@ public class GameActivity extends AppCompatActivity {
                         Intent data = result.getData();
                         if (data != null) {
                             trackName = data.getStringExtra("selectedFileName");
-                            gamesManager.getGamesRef().child("track").setValue(trackName);
-                            Toast.makeText(this, "Pista selezionata: " + trackName, Toast.LENGTH_SHORT).show();
-                            // qui fai quello che vuoi con selectedFileName
+                            thisGame.setTrack(trackName);
+                            dbManager.updateGame(thisGame);
                         }
                     }
                 }
@@ -208,7 +201,7 @@ public class GameActivity extends AppCompatActivity {
 
     private void leaveGame() {
         thisGame.getPlayers().remove(MyApplication.getUid());
-        gamesManager.updateGame(thisGame).addOnSuccessListener(unused -> {
+        dbManager.updateGame(thisGame).addOnSuccessListener(unused -> {
             MainActivity.checkAndNotify(thisGame.getCode(), "&fun=deletePlayer&player=" + MainActivity.playerName + "&senderUid=" + MyApplication.getUid());
             Toast.makeText(this, "Hai lasciato la gara", Toast.LENGTH_SHORT).show();
             MainActivity.toGameLobby(this);
@@ -216,25 +209,24 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void continueGame() {
-        //Toast.makeText(this, "Gara avviata!", Toast.LENGTH_SHORT).show();
-        // Puoi aggiungere qui logica per countdown o navigazione
         if (status.equals("waiting")) {
             removeListener();
-            gamesManager.prepareGridRoll(thisGame, thisGame.getPlayersList());
-            gamesManager.navigateToGame(gameCode, MyApplication.getUid(), MainActivity.playerName, false, "rolling");
-        } //else
-        //gamesManager.joinGame(gameCode, MyApplication.getUid(), MainActivity.playerName, true, status);
+            GameManager.prepareGridRoll(thisGame);
+            dbManager.updateGame(thisGame).addOnSuccessListener(unused -> {
+                MainActivity.navigateToGame(this, gameCode, MyApplication.getUid(), MainActivity.playerName, false, "rolling");
+            });
+        }
     }
 
     private void endGame() {
-        gamesManager.getGamesRef().child("status").setValue("finished").addOnCompleteListener(task -> {
+        /*gameManager.getGamesRef().child("status").setValue("finished").addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 Toast.makeText(this, "Gara Terminata!", Toast.LENGTH_SHORT).show();
                 // Puoi aggiungere qui logica per countdown o navigazione
             } else {
                 Toast.makeText(this, "Errore avvio gara", Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
     }
 
     private void addBot() {
@@ -250,10 +242,10 @@ public class GameActivity extends AppCompatActivity {
                 "bot",
                 rand.nextInt(11), // aggressività random
                 rand.nextInt(11),   // rischio random
-                0, -1, 0,-1,-1,0,0,0,0,0,0
+                0, -1, 0, -1, -1, 0, 0, 0, 0, 0, 0,""
         );
         thisGame.getPlayers().put(botId, bot);
-        gamesManager.updateGame(thisGame);
+        dbManager.updateGame(thisGame);
     }
 
     private String getUniqueBotName() {
@@ -279,7 +271,7 @@ public class GameActivity extends AppCompatActivity {
 
     private void removeListener() {
         if (eventListener != null) {
-            gamesManager.removeListener(eventListener);
+            dbManager.removeListener(eventListener);
             eventListener = null;
         }
     }

@@ -21,6 +21,18 @@ public class BotAI {
         DICE_RANGE.put(6, new int[]{21, 30});
     }
 
+    public static class CostoScalata {
+        public boolean possibile;
+        public int freniNecessari;
+        public int motoreNecessari;
+
+        public CostoScalata(boolean possibile, int freni, int motore) {
+            this.possibile = possibile;
+            this.freniNecessari = freni;
+            this.motoreNecessari = motore;
+        }
+    }
+
     public int tiraDado(PlayerClass bot, List<TrackCell> trackCells, Set<TrackCell> celleOccupate) {
         TrackCell currentCell = findCurrentCell(bot, trackCells);
         if (currentCell == null) {
@@ -83,27 +95,49 @@ public class BotAI {
         return candidates.isEmpty() ? null : candidates.get(0);
     }
 
-    private int distanzaAllaCurva(List<TrackCell> upcoming) {
-        for (int i = 0; i < upcoming.size(); i++) {
-            if (upcoming.get(i).getItemType() == TrackCell.ItemType.CURVE) {
-                return i;
-            }
+    public static CostoScalata valutaScalata(PlayerClass bot, int currGear, int newGear) {
+        int scalata = currGear - newGear;
+        if (scalata <= 1) return new CostoScalata(true, 0, 0);
+
+        int costo = scalata - 1;
+        int freniDisponibili = bot.getRemainingBrakes();
+        int motoreDisponibile = bot.getRemainingEngine();
+
+        int risk = bot.getRiskiness();
+        int aggr = bot.getAggressiveness();
+
+        int usaFreni = 0;
+        int usaMotore = 0;
+
+        if (risk >= 7 || aggr >= 7) {
+            usaMotore = Math.min(motoreDisponibile, costo);
+            usaFreni = Math.min(freniDisponibili, costo - usaMotore);
+        } else {
+            usaFreni = Math.min(freniDisponibili, costo);
+            usaMotore = Math.min(motoreDisponibile, costo - usaFreni);
         }
-        return Integer.MAX_VALUE;
+
+        boolean possibile = (usaFreni + usaMotore) >= costo;
+        return new CostoScalata(possibile, usaFreni, usaMotore);
     }
 
-
-    private boolean isCurvaInArrivo(List<TrackCell> upcoming) {
-        return upcoming.stream().anyMatch(c -> c.getItemType() == TrackCell.ItemType.CURVE);
+    public static void applicaScalata(PlayerClass bot, CostoScalata costo) {
+        bot.brakes+= costo.freniNecessari;
+        bot.engine+= costo.motoreNecessari;
     }
 
     private int scegliMarciaSimulata(PlayerClass bot, TrackCell current, List<TrackCell> allCells, Set<TrackCell> celleOccupate) {
         int bestMarcia = 1;
         int bestScore = Integer.MIN_VALUE;
+        CostoScalata migliorCosto = null;
 
         if (bot.turn == 0) return bestMarcia;
 
-        for (int marcia = 1; marcia <= 6; marcia++) {
+        int currGear = bot.getGear();
+        for (int marcia = 1; marcia <= Math.min(6,currGear + 1); marcia++) {
+            CostoScalata costo = valutaScalata(bot, currGear, marcia);
+            if (!costo.possibile) continue;
+
             int[] range = DICE_RANGE.get(marcia);
             int min = range[0];
             int max = range[1];
@@ -111,11 +145,20 @@ public class BotAI {
             for (int tiro = min; tiro <= max; tiro++) {
                 List<TrackCell> percorso = simulaPercorso(current, tiro, allCells);
                 int score = valutaPercorso(bot, percorso, celleOccupate);
+
+                score -= costo.freniNecessari * 5;
+                score -= costo.motoreNecessari * 10;
+
                 if (score > bestScore) {
                     bestScore = score;
                     bestMarcia = marcia;
+                    migliorCosto = costo;
                 }
             }
+        }
+
+        if (migliorCosto != null) {
+            applicaScalata(bot, migliorCosto);
         }
 
         return bestMarcia;
@@ -132,7 +175,6 @@ public class BotAI {
         return percorso;
     }
 
-
     private int valutaPercorso(PlayerClass bot, List<TrackCell> percorso, Set<TrackCell> celleOccupate) {
         int score = 0;
         int stops = 0;
@@ -142,7 +184,6 @@ public class BotAI {
         for (int i = 0; i < percorso.size(); i++) {
             TrackCell cell = percorso.get(i);
 
-            // Penalità per frenata in curva
             if (cell.getItemType() == TrackCell.ItemType.CURVE) {
                 stops++;
                 if (i >= cell.getRequiredStops()) {
@@ -150,55 +191,47 @@ public class BotAI {
                 }
             }
 
-            // Premio se arrivo
             if (cell.isFinish()) {
                 score += 1000;
             }
 
-            // Penalità per celle adiacenti occupate (contatto rischioso)
             for (TrackCell.Direction dir : TrackCell.Direction.values()) {
                 TrackCell vicino = cell.getAdjacent(dir);
                 if (vicino != null && celleOccupate.contains(vicino)) {
-                    if (risk <= 4) score -= 20;  // prudente, evita contatti
-                    else if (risk >= 8) score += 5;  // audace, non gli importa
+                    if (risk <= 4) score -= 20;
+                    else if (risk >= 8) score += 5;
                 }
             }
 
-            // Bonus se blocca altri (solo nell'ultima cella)
             if (i == percorso.size() - 1 && aggr >= 7) {
                 for (TrackCell.Direction dir : TrackCell.Direction.values()) {
                     TrackCell vicino = cell.getAdjacent(dir);
                     if (vicino != null && celleOccupate.contains(vicino)) {
-                        score += 15;  // vuole bloccare
+                        score += 15;
                     }
                 }
             }
         }
 
-        // Bonus generale per avanzamento
         score += percorso.size();
 
-        // Penalità per troppe curve se prudente
         if (stops > 0) {
             if (risk <= 4) score -= 10 * stops;
             else if (risk >= 8) score += 5 * stops;
         }
 
-        // Penalità per freni scarsi
-        if (bot.getRemainigBrakes() <= 2 && aggr <= 4) {
+        if (bot.getRemainingBrakes() <= 2 && aggr <= 4) {
             score -= 20;
         }
 
         return score;
     }
 
-
-
     public TrackCell scegliArrivoBot(PlayerClass bot, int movimento, List<TrackCell> trackCells, Set<TrackCell> celleOccupate) {
         TrackCell current = findCurrentCell(bot, trackCells);
         if (current == null) return null;
 
-        Set<TrackCell> arrivi = GamesManager.calcolaTuttiGliArrivi(current, movimento, celleOccupate);
+        Set<TrackCell> arrivi = GameManager.calcolaTuttiGliArrivi(current, movimento, celleOccupate);
         if (arrivi.isEmpty()) return null;
 
         TrackCell migliore = null;
@@ -206,37 +239,31 @@ public class BotAI {
 
         for (TrackCell arrivo : arrivi) {
             int score = 0;
-
-            // ➤ Premio avanzamento
             score += arrivo.getRow() * 10;
 
-            // ➤ Curve: penalità o premio
             if (arrivo.getItemType() == TrackCell.ItemType.CURVE) {
-                if (bot.getRiskiness() <= 4) score -= 30;  // prudente
-                else if (bot.getRiskiness() >= 8) score += 10;  // spericolato
+                if (bot.getRiskiness() <= 4) score -= 30;
+                else if (bot.getRiskiness() >= 8) score += 10;
             }
 
-            // ➤ Bloccare avversari
             if (bot.getAggressiveness() >= 7) {
                 for (TrackCell.Direction dir : TrackCell.Direction.values()) {
                     TrackCell vicino = arrivo.getAdjacent(dir);
                     if (vicino != null && celleOccupate.contains(vicino)) {
-                        score += 15;  // bonus se può bloccare
+                        score += 15;
                     }
                 }
             }
 
-            // ➤ Evitare rischi (celle adiacenti occupate)
             if (bot.getRiskiness() <= 4) {
                 for (TrackCell.Direction dir : TrackCell.Direction.values()) {
                     TrackCell vicino = arrivo.getAdjacent(dir);
                     if (vicino != null && celleOccupate.contains(vicino)) {
-                        score -= 20;  // penalità se vicino ad altri
+                        score -= 20;
                     }
                 }
             }
 
-            // ➤ Bonus finish
             if (arrivo.isFinish()) {
                 score += 1000;
             }
@@ -249,5 +276,4 @@ public class BotAI {
 
         return migliore;
     }
-
 }

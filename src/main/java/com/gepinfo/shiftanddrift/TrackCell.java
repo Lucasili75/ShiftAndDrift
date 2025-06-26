@@ -126,7 +126,7 @@ public class TrackCell {
         }
 
         // Puoi implementarlo come vuoi, ma in generale devi avere accesso alla track
-        return GamesManager.getTrackCellAt(newRow, newCol); // adatta in base alla tua struttura
+        return GameManager.getTrackCellAt(newRow, newCol); // adatta in base alla tua struttura
     }
 
 }

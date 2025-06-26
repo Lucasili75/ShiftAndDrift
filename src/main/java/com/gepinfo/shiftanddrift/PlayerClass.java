@@ -39,6 +39,7 @@ public class PlayerClass {
     public int fuel;
     public int engine;
     public int curveStops;
+    public String status;
 
     public static final int maxTires=4;
     public static final int maxBrakes=3;
@@ -60,7 +61,7 @@ public class PlayerClass {
     // Costruttore completo (usalo per bot e umani)
     public PlayerClass(String uid, String name, int gear, int position,
                        String carColorFront, String carColorRear, String carColorBody,
-                       String playerType, int aggressiveness, int riskiness, int lap, int roll, int turn, int row, int column, int tires, int brakes, int body, int fuel, int engine,int curveStops) {
+                       String playerType, int aggressiveness, int riskiness, int lap, int roll, int turn, int row, int column, int tires, int brakes, int body, int fuel, int engine,int curveStops, String status) {
         this.uid=uid;
         this.name = name;
         this.gear = gear;
@@ -82,11 +83,12 @@ public class PlayerClass {
         this.fuel=fuel;
         this.engine=engine;
         this.curveStops=curveStops;
+        this.status=status;
     }
 
     // Costruttore compatibile per vecchi usi (senza colori né AI)
     public PlayerClass(String uid,String name, int gear, int position, String colorFront, String colorRear, String carColorBody) {
-        this(uid,name, gear, position, colorFront, colorRear, carColorBody, "player", 0, 0, 0, -1,0,-1,-1,0,0,0,0,0,0);
+        this(uid,name, gear, position, colorFront, colorRear, carColorBody, "player", 0, 0, 0, -1,0,-1,-1,0,0,0,0,0,0,"");
     }
 
     // Getter
@@ -139,15 +141,15 @@ public class PlayerClass {
     }
 
     @Exclude
-    public int getRemainigBrakes(){ return maxBrakes-brakes;}
+    public int getRemainingBrakes(){ return maxBrakes-brakes;}
     @Exclude
-    public int getRemainigFuel(){ return maxFuel-fuel;}
+    public int getRemainingFuel(){ return maxFuel-fuel;}
     @Exclude
-    public int getRemainigEngine(){ return maxEngine-engine;}
+    public int getRemainingEngine(){ return maxEngine-engine;}
     @Exclude
-    public int getRemainigTires(){ return maxTires-tires;}
+    public int getRemainingTires(){ return maxTires-tires;}
     @Exclude
-    public int getRemainigBody(){ return maxBody-body;}
+    public int getRemainingBody(){ return maxBody-body;}
     public int getAggressiveness() {
         return aggressiveness;
     }

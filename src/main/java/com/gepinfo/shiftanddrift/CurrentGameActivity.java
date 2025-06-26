@@ -40,7 +40,7 @@ public class CurrentGameActivity extends AppCompatActivity {
     TextView textPlayerName;
     TextView textPlayerLap;
     TextView textPlayerCurveStops;
-    GamesManager gamesManager;
+    DbManager dbManager;
     private String gameCode;
     private String status, trackName;
     private boolean isHost = false;
@@ -59,6 +59,8 @@ public class CurrentGameActivity extends AppCompatActivity {
     int tempEngine;
     int tempTires;
     int marciaSelezionata;
+    List<TrackCell> celleEvidenziate = new ArrayList<>();
+    Set<TrackCell> celleOccupate = new HashSet<>();
 
     private static final Map<Integer, Integer> DICE_IMAGE = new HashMap<>();
 
@@ -84,7 +86,7 @@ public class CurrentGameActivity extends AppCompatActivity {
         overlay = findViewById(R.id.overlay);
         imageView = findViewById(R.id.imageViewTrack);
         gameCode = getIntent().getStringExtra("gameCode");
-        gamesManager = new GamesManager(this, gameCode);
+        dbManager = new DbManager(this, gameCode);
         MainActivity.gamePrefs = getSharedPreferences("ShiftAndDriftPrefs", MODE_PRIVATE);
         MainActivity.loadParms();
         eventListener = new ValueEventListener() {
@@ -92,6 +94,8 @@ public class CurrentGameActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 thisGame = snapshot.getValue(GameClass.class);
+                marciaSelezionata = -1;
+                celleEvidenziate = new ArrayList<>();
                 if (thisGame != null) {
                     String name = thisGame.getName();
                     if (name != null) {
@@ -103,46 +107,48 @@ public class CurrentGameActivity extends AppCompatActivity {
 
                     trackName = thisGame.getTrack();
                     if ((trackName != null) && (!trackName.isEmpty())) {
-                        thisGame.setTrackMap((gamesManager.getTrackMap() == null) ? gamesManager.loadTrackMap(thisGame.getTrack()) : gamesManager.getTrackMap());
+                        if (GameManager.getTrackMap() == null)
+                            GameManager.loadTrackMap(trackName, CurrentGameActivity.this);
                         loadTrack();
                     }
 
-                    currentPlayer = gamesManager.nextTurn(thisGame.getPlayersList(), thisGame.getCurrentTurn(), true);
+                    currentPlayer = GameManager.nextTurn(thisGame.getPlayersList(), thisGame.getCurrentTurn(), true);
 
                     if (currentPlayer != null) {
+                        // imposto tutte le celle occupate dai giocatori
+                        celleOccupate.clear();
+                        for (PlayerClass p : thisGame.getPlayersList())
+                            celleOccupate.add(GameManager.getTrackCellAt(p.row, p.column));
                         overlay.setSelectedPlayer(currentPlayer);
                         marciaSelezionata = currentPlayer.gear;
-                        updatePlayerCardContainer();
 
                         // 👉 Se è un bot e tocca a lui, lo facciamo tirare
                         if (currentPlayer.isBot()) {
                             // Qualsiasi client può far tirare un bot se roll ancora assente
-                            Set<TrackCell> occupate = new HashSet<>();
-                            for (PlayerClass p : thisGame.getPlayersList())
-                                occupate.add(GamesManager.getTrackCellAt(p.row, p.column));
-                            int diceValue = gamesManager.botAI.tiraDado(currentPlayer, thisGame.getTrackMap().getCells(), occupate);
-                            TrackCell arrivo = gamesManager.botAI.scegliArrivoBot(currentPlayer, diceValue, thisGame.getTrackMap().getCells(), occupate);
+                            int diceValue = GameManager.botAI.tiraDado(currentPlayer, GameManager.getTrackMap().getCells(), celleOccupate);
+                            TrackCell arrivo = GameManager.botAI.scegliArrivoBot(currentPlayer, diceValue, GameManager.getTrackMap().getCells(), celleOccupate);
                             if (arrivo != null) {
                                 currentPlayer.row = arrivo.getRow();
                                 currentPlayer.column = arrivo.getColumn();
-                                thisGame.updatePlayerByUid(currentPlayer);
-                                thisGame.updatePlayerMapFromArrayList();
-                                gamesManager.updateGame(thisGame);
+                                thisGame.updatePlayerArrayByUid(currentPlayer).updatePlayerMapFromArrayList();
+                                dbManager.updateGame(thisGame);
                             } else {
                                 // NESSUNA POSIZIONE DI ARRIVO DOPO IL TIRO... IN TEORIA VUOL DIRE CHE IL BOT E' FUORI...
                             }
                         } else {
-                            if (currentPlayer.gear != 0) {
-                                dice.setImageDrawable(getDrawable(DICE_IMAGE.get(currentPlayer.gear)));
-                            }
-                            if (!currentPlayer.uid.equals(MyApplication.getUid()))
+                            if (!currentPlayer.uid.equals(MyApplication.getUid())) {
+                                if (currentPlayer.status.equals("rolled")) {
+                                    celleEvidenziate = new ArrayList<>(GameManager.calcolaTuttiGliArrivi(GameManager.getTrackCellAt(currentPlayer.row, currentPlayer.column), currentPlayer.roll, celleOccupate));
+                                }
                                 MainActivity.checkAndNotify(gameCode, "&fun=rollToGrid&toUid=" + currentPlayer.uid);
-                            else {
+                            } else {
                                 /*Map<TrackCell.Direction, TrackCell> opzioni = GamesManager.calcolaArriviPossibili(GamesManager.getCellForPlayer(currentPlayer,thisGame.getTrackMap().getCells()), tiroDado, thisGame.getTrackMap().getCells());
                                 List<TrackCell> evidenziate = new ArrayList<>(opzioni.values());
                                 overlay.setHighlightCells(evidenziate);*/
                             }
                         }
+                        updatePlayerCardContainer();
+                        updateBoardOverlay();
                     } else {
                         endTurn();
                     }
@@ -155,20 +161,20 @@ public class CurrentGameActivity extends AppCompatActivity {
             }
         };
 
-        gamesManager.listenToGame(eventListener);
+        dbManager.listenToGame(eventListener);
         trackName = null;
         imageView.setOnTouchListener((v, event) -> {
             // Dopo ogni gesto touch, aggiorniamo la matrice
             TrackCell selected = overlay.clickOnArrival(event);
             if (selected != null) {
-                TrackCell previous = GamesManager.getTrackCellAt(currentPlayer.row, currentPlayer.column); // ad esempio, salvata prima del movimento
+                TrackCell previous = GameManager.getTrackCellAt(currentPlayer.row, currentPlayer.column); // ad esempio, salvata prima del movimento
 
                 if (previous.getItemType() == CURVE &&
                         selected.getItemType() != CURVE) {
 
                     if (currentPlayer.getCurveStops() < previous.getRequiredStops()) {
                         // Penalizza o avvisa!
-                        currentPlayer.applyPenalty("Curva non rispettata");
+                        //currentPlayer.applyPenalty("Curva non rispettata");
                     }
 
                     currentPlayer.resetCurveStops(); // esce dalla curva, reset
@@ -180,11 +186,10 @@ public class CurrentGameActivity extends AppCompatActivity {
                 }
                 currentPlayer.row = selected.getRow();
                 currentPlayer.column = selected.getColumn();
-                currentPlayer.turn++;
                 overlay.clearHighlightCells();
                 overlay.clearSelectedPlayer();
                 thisGame.updatePlayerMapFromArrayList();
-                gamesManager.updateGame(thisGame);
+                dbManager.updateGame(thisGame);
             } else overlay.setTransformMatrix(imageView.getImageMatrixCopy());
             return false; // oppure true se gestisci tu i tocchi
         });
@@ -205,7 +210,6 @@ public class CurrentGameActivity extends AppCompatActivity {
                 marciaSelezionata = gearIndex + 1;
 
                 if (isAllowed(marciaSelezionata)) {
-                    highlightGear(marciaSelezionata);
                     onMarciaSelezionata(marciaSelezionata);
                 }
             }
@@ -214,23 +218,25 @@ public class CurrentGameActivity extends AppCompatActivity {
         dice = findViewById(R.id.imageDice);
         dice.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                int diceValue = DiceManager.tiraDado(currentPlayer.gear);
+                int diceValue = DiceManager.tiraDado(marciaSelezionata);
+                currentPlayer.roll = diceValue;
+                currentPlayer.gear = marciaSelezionata;
+                currentPlayer.status = "rolled";
+                dbManager.updatePlayerWithTransaction(currentPlayer);
+                updatePlayerCardContainer();
                 NumberPopup.showNumber(this, String.valueOf(diceValue));
                 handler.postDelayed(() -> {
-                    Set<TrackCell> occupate = new HashSet<>();
-                    for (PlayerClass p : thisGame.getPlayersList())
-                        occupate.add(GamesManager.getTrackCellAt(p.row, p.column));
-                    List<TrackCell> evidenziate = new ArrayList<>(GamesManager.calcolaTuttiGliArrivi(GamesManager.getTrackCellAt(currentPlayer.row, currentPlayer.column), diceValue, occupate));
-                    for (TrackCell destinazione : evidenziate) {
-                        List<TrackCell> path = gamesManager.botAI.simulaPercorso(GamesManager.getTrackCellAt(currentPlayer.row, currentPlayer.column), diceValue, gamesManager.getTrackMap().getCells());
+                    celleEvidenziate = new ArrayList<>(GameManager.calcolaTuttiGliArrivi(GameManager.getTrackCellAt(currentPlayer.row, currentPlayer.column), diceValue, celleOccupate));
+                    for (TrackCell destinazione : celleEvidenziate) {
+                        List<TrackCell> path = GameManager.botAI.simulaPercorso(GameManager.getTrackCellAt(currentPlayer.row, currentPlayer.column), diceValue, GameManager.getTrackMap().getCells());
                         boolean penalized = curvaNonRispettata(path, currentPlayer);
-                        int brakes = stimaFreni(path, currentPlayer);
-                        int tires = stimaGomme(path, currentPlayer);
+                        //int brakes = stimaFreni(path, currentPlayer);
+                        //int tires = stimaGomme(path, currentPlayer);
 
-                        overlay.highlightInfos.add(new GameBoardOverlay.HighlightInfo(destinazione, penalized, brakes, tires));
+                        //overlay.highlightInfos.add(new GameBoardOverlay.HighlightInfo(destinazione, penalized, brakes, tires));
                     }
 
-                    overlay.setHighlightCells(evidenziate);
+                    updateBoardOverlay();
                 }, 1000);
             }
             return true;
@@ -239,7 +245,7 @@ public class CurrentGameActivity extends AppCompatActivity {
 
     private void removeListener() {
         if (eventListener != null) {
-            gamesManager.removeListener(eventListener);
+            dbManager.removeListener(eventListener);
             eventListener = null;
         }
     }
@@ -252,45 +258,37 @@ public class CurrentGameActivity extends AppCompatActivity {
 
     private void loadTrack() {
         if ((trackName != null) && (!trackName.isEmpty())) {
-            //thisGame.setTrackMap(gamesManager.loadTrackMap(trackName));
-                /*TrackMap trackMap = TrackMap.loadTrackFromJson(trackName, this);
+            // Imposta immagine della pista
+            String imageFileName = GameManager.getTrackMap().getImagePath(); // es: "track_background.png"
+            File imageFile = new File(MainActivity.getLocalPath(this), imageFileName);
 
-            if (trackMap != null) */
-            {
-                // Imposta immagine della pista
-                String imageFileName = thisGame.getTrackMap().getImagePath(); // es: "track_background.png"
-                File imageFile = new File(MainActivity.getLocalPath(this), imageFileName);
+            if (imageFile.exists()) {
+                Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                imageView.setImageBitmap(bitmap);
+                imageView.post(() -> {
+                    // Imposta scala minima in base a 80% altezza
+                    int viewWidth = imageView.getWidth();
+                    int viewHeight = imageView.getHeight();
+                    float imgW = bitmap.getWidth();
+                    float imgH = bitmap.getHeight();
 
-                if (imageFile.exists()) {
-                    Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
-                    imageView.setImageBitmap(bitmap);
-                    imageView.post(() -> {
-                        // Imposta scala minima in base a 80% altezza
-                        int viewWidth = imageView.getWidth();
-                        int viewHeight = imageView.getHeight();
-                        float imgW = bitmap.getWidth();
-                        float imgH = bitmap.getHeight();
+                    float minZoom = Math.max(viewWidth / imgW, (viewHeight) / imgH);
+                    imageView.setMinZoom(minZoom);
 
-                        float minZoom = Math.max(viewWidth / imgW, (viewHeight) / imgH);
-                        imageView.setMinZoom(minZoom);
-
-                        overlay.setCells(thisGame.getTrackMap().getCells());
-                        overlay.setTransformMatrix(imageView.getImageMatrixCopy());
-                    });
-                } else {
-                    Log.e("TrackLoad", "Image not found: " + imageFile.getAbsolutePath());
-                }
-            } /*else{
-                Toast.makeText(this, "Errore nel caricamento della mappa", Toast.LENGTH_SHORT).show();
-            }*/
+                    overlay.setCells(GameManager.getTrackMap().getCells());
+                    overlay.setTransformMatrix(imageView.getImageMatrixCopy());
+                });
+            } else {
+                Log.e("TrackLoad", "Image not found: " + imageFile.getAbsolutePath());
+            }
         }
     }
 
     private void endTurn() {
         handler.postDelayed(() -> {
-            removeListener();
-            gamesManager.sortByPositionAndUpdate(thisGame.getPlayersList(), false);
-            gamesManager.updateGame(thisGame);
+            GameManager.sortByPositionAndUpdate(thisGame.getPlayersList(), false);
+            thisGame.updatePlayerMapFromArrayList().newTurn();
+            dbManager.updateGame(thisGame);
         }, 1500);
     }
 
@@ -325,9 +323,9 @@ public class CurrentGameActivity extends AppCompatActivity {
             if (marcia > currGear) return true;
             else {
                 if ((currGear - marcia) == 1) return true;
-                if ((currGear - marcia) == 2) return currentPlayer.getRemainigBrakes() > 0;
+                if ((currGear - marcia) == 2) return currentPlayer.getRemainingBrakes() > 0;
                 if ((currGear - marcia) == 3)
-                    return (currentPlayer.getRemainigBrakes() > 0 && currentPlayer.getRemainigEngine() > 0);
+                    return (currentPlayer.getRemainingBrakes() > 0 && currentPlayer.getRemainingEngine() > 0);
                 //if ((currGear - marcia) <= (currentPlayer.getRemainigBrakes())) return true;
             }
         }
@@ -336,9 +334,9 @@ public class CurrentGameActivity extends AppCompatActivity {
 
     private void onMarciaSelezionata(int marcia) {
         // 1. Memorizza la marcia nel player
-        currentPlayer.setGear(marcia);
-        thisGame.updatePlayerByUid(currentPlayer);
-        gamesManager.updateGame(thisGame);
+        //currentPlayer.setGear(marcia);
+        //thisGame.updatePlayerArrayByUid(currentPlayer);
+        //dbManager.updateGame(thisGame);
         int currGear = currentPlayer.getGear();
         tempBrakes = 0;
         tempEngine = 0;
@@ -391,11 +389,28 @@ public class CurrentGameActivity extends AppCompatActivity {
         textPlayerLap.setText(getString(R.string.giro) + currentPlayer.lap);
         textPlayerCurveStops.setText(getString(R.string.stops) + currentPlayer.curveStops);
         highlightGear(marciaSelezionata);
+        if (marciaSelezionata != 0) {
+            dice.setImageDrawable(getDrawable(DICE_IMAGE.get(marciaSelezionata)));
+        }
+        dice.setEnabled(true);
+        dice.setAlpha(1f);
+        gears.setEnabled(true);
+        gears.setAlpha(1f);
+        if(currentPlayer.status.equals("rolled")){
+            dice.setEnabled(false);
+            dice.setAlpha(0.4f);
+            gears.setEnabled(false);
+            gears.setAlpha(0.4f);
+        }
         updateIndicator(tiresBoxContainer, PlayerClass.maxTires, currentPlayer.tires + tempTires, getDrawable(R.drawable.box_spin));
         updateIndicator(brakesBoxContainer, PlayerClass.maxBrakes, currentPlayer.brakes + tempBrakes, null);
         updateIndicator(fuelBoxContainer, PlayerClass.maxFuel, currentPlayer.fuel, null);
         updateIndicator(bodyBoxContainer, PlayerClass.maxBody, currentPlayer.body, getDrawable(R.drawable.box_explosion));
         updateIndicator(engineBoxContainer, PlayerClass.maxEngine, currentPlayer.engine + tempEngine, getDrawable(R.drawable.box_explosion));
+    }
+
+    private void updateBoardOverlay() {
+        if (!celleEvidenziate.isEmpty()) overlay.setHighlightCells(celleEvidenziate);
     }
 
     private boolean curvaNonRispettata(List<TrackCell> path, PlayerClass player) {

@@ -218,4 +218,28 @@ public class MainActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         context.startActivity(intent);
     }
+
+    public static void navigateToGame(Context context, String code, String uid, String playerName, boolean notify, String status) {
+        if (notify)
+            checkAndNotify(code, "&fun=newPlayer&player=" + playerName);
+        Intent intent = new Intent(context, getActivityFromStatus(status));
+        intent.putExtra("gameCode", code);
+        intent.putExtra("uid", uid);
+        intent.putExtra("playerName", playerName);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        context.startActivity(intent);
+    }
+
+    public static Class getActivityFromStatus(String status) {
+        switch (status) {
+            case "started":
+                return CurrentGameActivity.class;
+            case "waiting":
+                return GameActivity.class;
+            case "rolling":
+                return GridRollActivity.class;
+            default:
+                return GameLobbyActivity.class;
+        }
+    }
 }

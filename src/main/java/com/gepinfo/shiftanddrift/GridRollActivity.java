@@ -34,7 +34,7 @@ public class GridRollActivity extends AppCompatActivity {
     private TextView textTrackName;
     private boolean isHost = false;
     Handler handler;
-    GamesManager gamesManager;
+    DbManager dbManager;
     ValueEventListener eventListener;
     GameClass thisGame = new GameClass();
 
@@ -56,7 +56,7 @@ public class GridRollActivity extends AppCompatActivity {
         trackName = getIntent().getStringExtra("trackName");
         gameCode = getIntent().getStringExtra("gameCode");
         uid = getIntent().getStringExtra("uid");
-        gamesManager = new GamesManager(this, gameCode);
+        dbManager = new DbManager(this, gameCode);
         MainActivity.gamePrefs = getSharedPreferences("ShiftAndDriftPrefs", MODE_PRIVATE);
         MainActivity.loadParms();
         textPlayerName.setText(getString(R.string.giocatore) + MainActivity.playerName);
@@ -76,14 +76,12 @@ public class GridRollActivity extends AppCompatActivity {
 
                     // Controlla se sei l’host
                     isHost = thisGame.getHost().equals(MyApplication.getUid());
-
                     rolls.addAll(thisGame.getPlayersList());
                     String status = thisGame.getStatus();
                     if ((!isHost) && (status.equals("waiting"))) {
-                        gamesManager.navigateToGame(gameCode, MyApplication.getUid(), MainActivity.playerName, false, status);
+                        MainActivity.navigateToGame(GridRollActivity.this, gameCode, MyApplication.getUid(), MainActivity.playerName, false, status);
                     }
 
-                    //gamesManager.sortByPositionAndUpdate(rolls,true);     SECONDO ME NON DOVREBBE SERVIRE
                     trackName = thisGame.getTrack();
                     if (trackName != null) {
                         textTrackName.setText(trackName);
@@ -94,7 +92,7 @@ public class GridRollActivity extends AppCompatActivity {
                     playerRollsList.setAdapter(adapter);
                     adapter.notifyDataSetChanged();
                     // Trova il prossimo giocatore che deve ancora tirare
-                    PlayerClass nextToRoll = gamesManager.nextTurn(rolls,-1,false);
+                    PlayerClass nextToRoll = GameManager.nextTurn(rolls, -1, false);
 
                     if (nextToRoll != null) {
                         // Se il prossimo giocatore da tirare sono io
@@ -112,8 +110,8 @@ public class GridRollActivity extends AppCompatActivity {
                         if (nextToRoll.isBot()) {
                             // Qualsiasi client può far tirare un bot se roll ancora assente
                             if (nextToRoll.roll < 0) {
-                                int diceValue = DiceManager.tiraDado(99);
-                                gamesManager.rollDice(nextToRoll.uid, true, diceValue);
+                                nextToRoll.roll = DiceManager.tiraDado(99);
+                                dbManager.updatePlayerWithTransaction(nextToRoll);
                             }
                         } else {
                             if (!nextToRoll.uid.equals(MyApplication.getUid()))
@@ -136,18 +134,22 @@ public class GridRollActivity extends AppCompatActivity {
             }
         };
 
-        gamesManager.listenToGame(eventListener);
+        dbManager.listenToGame(eventListener);
 
         diceImage.setOnClickListener(v -> {
             int diceValue = DiceManager.tiraDado(99);
             NumberPopup.showNumber(this, String.valueOf(diceValue));
-            handler.postDelayed(() -> gamesManager.rollDice(uid, false, diceValue), 1000);
+            handler.postDelayed(() -> {
+                thisGame.getMyPlayer().roll = diceValue;
+                thisGame.updatePlayerMapByUid(thisGame.getMyPlayer());
+                dbManager.updateGame(thisGame);
+            }, 1000);
         });
         buttonToGameActivity.setOnClickListener(v -> {
             removeListener();
             thisGame.setStatus("waiting");
-            gamesManager.updateGame(thisGame).addOnSuccessListener(unused -> {
-                gamesManager.navigateToGame(gameCode, MyApplication.getUid(), MainActivity.playerName, false, thisGame.getStatus());
+            dbManager.updateGame(thisGame).addOnSuccessListener(unused -> {
+                MainActivity.navigateToGame(GridRollActivity.this, gameCode, MyApplication.getUid(), MainActivity.playerName, false, thisGame.getStatus());
             });
         });
         buttonGameLobby.setOnClickListener(v -> {
@@ -164,14 +166,13 @@ public class GridRollActivity extends AppCompatActivity {
     }
 
     private void assignGridPositions() {
+        removeListener();
         handler.postDelayed(() -> {
-            removeListener();
-            gamesManager.loadTrackMap(thisGame.getTrack());
-            thisGame.setArrayPlayer(gamesManager.assignGridPositions(rolls)).updatePlayerMapFromArrayList();
-            thisGame.setStatus("started");
-            gamesManager.updateGame(thisGame).addOnSuccessListener(unused -> {
+            GameManager.loadTrackMap(thisGame.getTrack(), GridRollActivity.this);
+            thisGame.setArrayPlayer(GameManager.assignGridPositions(rolls)).updatePlayerMapFromArrayList().setCurrentTurn(0).setStatus("started");
+            dbManager.updateGame(thisGame).addOnSuccessListener(unused -> {
                 MainActivity.checkAndNotify(thisGame.getCode(), "&senderUid=" + MyApplication.getUid());
-                gamesManager.joinGame(thisGame);
+                MainActivity.navigateToGame(GridRollActivity.this, gameCode, MyApplication.getUid(), MainActivity.playerName, false, thisGame.getStatus());
             });
         }, 1500);
     }
@@ -183,7 +184,7 @@ public class GridRollActivity extends AppCompatActivity {
 
     private void removeListener() {
         if (eventListener != null) {
-            gamesManager.removeListener(eventListener);
+            dbManager.removeListener(eventListener);
             eventListener = null;
         }
     }

@@ -97,7 +97,7 @@ public class GameBoardOverlay extends View {
         // Applica la stessa trasformazione usata dall'immagine
         canvas.concat(transformMatrix);
         for (PlayerClass player : players) {
-            TrackCell cell = GamesManager.getTrackCellAt(player.row,player.column);
+            TrackCell cell = GameManager.getTrackCellAt(player.row,player.column);
             if (cell == null) continue;
 
             float centerX = (float) cell.getPosX();

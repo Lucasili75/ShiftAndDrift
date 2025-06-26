@@ -13,7 +13,24 @@ public class GameClass {
     private String code;
     private String name;
     private String status;
+
+    public void setTrack(String track) {
+        this.track = track;
+    }
+
     private String track;
+
+    @Exclude
+    public GameClass newTurn() {
+        this.currentTurn++;
+        return this;
+    }
+
+    public GameClass setCurrentTurn(int currentTurn) {
+        this.currentTurn = currentTurn;
+        return this;
+    }
+
     private int currentTurn;
     private String host;
 
@@ -25,8 +42,7 @@ public class GameClass {
 
     // ⚠️ Usa una mappa per evitare problemi di deserializzazione
     private Map<String, PlayerClass> players = new HashMap<>();
-    private PlayerClass myPlayer=null;
-    private TrackMap trackMap = new TrackMap();
+    private PlayerClass myPlayer = null;
 
     // 🔹 Costruttore vuoto richiesto da Firebase
     public GameClass() {
@@ -60,6 +76,10 @@ public class GameClass {
         return track;
     }
 
+    public void setCode(String code) {
+        this.code = code;
+    }
+
     public int getCurrentTurn() {
         return currentTurn;
     }
@@ -68,8 +88,9 @@ public class GameClass {
         return host;
     }
 
-    public void setStatus(String status) {
+    public GameClass setStatus(String status) {
         this.status = status;
+        return this;
     }
 
     public Map<String, PlayerClass> getPlayers() {
@@ -80,6 +101,9 @@ public class GameClass {
         this.players = players;
         this.arrayPlayer.clear();
         for (Map.Entry<String, PlayerClass> entry : players.entrySet()) {
+            if (entry.getValue().uid.equals(MyApplication.getUid())) {
+                myPlayer = entry.getValue();
+            }
             this.arrayPlayer.add(entry.getValue());
         }
     }
@@ -89,7 +113,7 @@ public class GameClass {
         return this;
     }
 
-    private List<PlayerClass> arrayPlayer=new ArrayList<>();
+    private List<PlayerClass> arrayPlayer = new ArrayList<>();
 
     // 🔹 Metodo di utilità per ottenere una lista
     @Exclude
@@ -98,15 +122,27 @@ public class GameClass {
     }
 
     @Exclude
-    public void updatePlayerByUid(PlayerClass p){
-        for(int index=0;index<arrayPlayer.size();index++) if(arrayPlayer.get(index).uid.equals(p.uid)) {arrayPlayer.set(index,p);break;}
+    public GameClass updatePlayerArrayByUid(PlayerClass p) {
+        for (int index = 0; index < arrayPlayer.size(); index++)
+            if (arrayPlayer.get(index).uid.equals(p.uid)) {
+                arrayPlayer.set(index, p);
+                break;
+            }
+        return this;
     }
 
     @Exclude
-    public void updatePlayerMapFromArrayList(){
-        for(PlayerClass element:arrayPlayer){
-            players.put(element.uid,element);
+    public GameClass updatePlayerMapByUid(PlayerClass p) {
+        players.put(p.uid, p);
+        return this;
+    }
+
+    @Exclude
+    public GameClass updatePlayerMapFromArrayList() {
+        for (PlayerClass element : arrayPlayer) {
+            players.put(element.uid, element);
         }
+        return this;
     }
 
     // 🔹 Controlla se l'utente è nella partita
@@ -115,7 +151,7 @@ public class GameClass {
         String myUid = MyApplication.getUid();
         for (PlayerClass player : players.values()) {
             if (player.uid.equals(myUid)) {
-                myPlayer=player;
+                myPlayer = player;
                 return true;
             }
         }
@@ -129,17 +165,8 @@ public class GameClass {
     }
 
     @Exclude
-    public PlayerClass getMyPlayer(){
+    public PlayerClass getMyPlayer() {
         return myPlayer;
     }
 
-    @Exclude
-    public void setTrackMap(TrackMap trackMap){
-        this.trackMap=trackMap;
-    }
-
-    @Exclude
-    public TrackMap getTrackMap(){
-        return trackMap;
-    }
 }

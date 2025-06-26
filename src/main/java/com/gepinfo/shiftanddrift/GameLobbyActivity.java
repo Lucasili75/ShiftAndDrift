@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
@@ -27,13 +28,13 @@ public class GameLobbyActivity extends AppCompatActivity {
     private List<GameClass> games = new ArrayList<>();
 
     private String gameName;
-    GamesManager gamesManager;
+    DbManager dbManager;
     ValueEventListener eventListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        gamesManager = new GamesManager(this, "");
+        dbManager = new DbManager(this, "");
         setContentView(R.layout.activity_lobby);
 
         TextView textPlayerName = findViewById(R.id.textPlayerName);
@@ -63,8 +64,7 @@ public class GameLobbyActivity extends AppCompatActivity {
             }
         };
 
-        gamesManager.listenToGame(eventListener);
-        //gamesManager.setMyPlayer(null);
+        dbManager.listenToGame(eventListener);
 
         buttonCreateGame.setOnClickListener(v -> {
             requestGameName();
@@ -72,7 +72,15 @@ public class GameLobbyActivity extends AppCompatActivity {
 
         listViewGames.setOnItemClickListener((parent, view, position, id) -> {
             GameClass selectedGame = games.get(position);
-            gamesManager.joinGame(selectedGame);
+            Task<Void> retVal = dbManager.joinGame(selectedGame);
+            if (retVal == null) {
+                MainActivity.navigateToGame(this, selectedGame.getCode(), MyApplication.getUid(), MainActivity.playerName, true, selectedGame.getStatus());
+            } else {
+                retVal.addOnSuccessListener(unused -> {
+                    MainActivity.checkAndNotify(selectedGame.getCode(), "");
+                    MainActivity.navigateToGame(this, selectedGame.getCode(), MyApplication.getUid(), MainActivity.playerName, true, selectedGame.getStatus());
+                });
+            }
         });
     }
 
@@ -89,7 +97,7 @@ public class GameLobbyActivity extends AppCompatActivity {
                 .setPositiveButton(getString(R.string.conferma), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         gameName = txtUrl.getText().toString();
-                        gamesManager.createGame(MyApplication.getUid(), MainActivity.playerName, gameName);
+                        dbManager.createGame(MyApplication.getUid(), gameName);
                     }
                 })
                 .setNegativeButton(getString(R.string.annulla), new DialogInterface.OnClickListener() {
@@ -102,7 +110,7 @@ public class GameLobbyActivity extends AppCompatActivity {
 
     private void removeListener() {
         if (eventListener != null) {
-            gamesManager.removeListener(eventListener);
+            dbManager.removeListener(eventListener);
             eventListener = null;
         }
     }
