@@ -2,11 +2,11 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js');
 
 firebase.initializeApp({
-  apiKey: "YOUR_API_KEY",
+  apiKey: "AIzaSyAwSsoQSRoFH0DBtMDEG75CL9Z6-oRhZ00",
   authDomain: "shiftanddrift.firebaseapp.com",
   projectId: "shiftanddrift",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  messagingSenderId: "332080935366",
+  appId: "1:332080935366:android:23467af08e9139644d02c7"
 });
 
 const messaging = firebase.messaging();
