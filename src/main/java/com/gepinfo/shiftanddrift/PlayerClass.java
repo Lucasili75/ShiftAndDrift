@@ -107,6 +107,10 @@ public class PlayerClass {
         return gear;
     }
 
+    public int getRoll() {
+        return roll;
+    }
+
     public int getTurn() {
         return turn;
     }
@@ -170,5 +174,10 @@ public class PlayerClass {
     @Exclude
     public int getCurveStops() {
         return curveStops;
+    }
+
+    @Exclude
+    public boolean itsMe(){
+        return this.uid.equals(MyApplication.getUid());
     }
 }

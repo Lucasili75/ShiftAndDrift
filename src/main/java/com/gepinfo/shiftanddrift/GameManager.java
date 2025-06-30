@@ -3,7 +3,6 @@ package com.gepinfo.shiftanddrift;
 import android.content.Context;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -21,36 +20,36 @@ public class GameManager {
 
     // AZZERA I TIRI INIZIALI E PREDISPONE PER DETERMINARE LA GRIGLIA DI PARTENZA
     public static void prepareGridRoll(GameClass game) {
-        Collections.shuffle(game.getPlayersList());
         int i = 0;
-        for (PlayerClass element : game.getPlayersList()) {
+        List<PlayerClass> lista=game.getPlayersShuffled();
+        for (PlayerClass element : lista) {
             element.roll = -1;
             element.position = ++i;
             element.turn = -1;
+            game.getPlayers().put(element.uid,element);
         }
-        game.updatePlayerMapFromArrayList();
         game.setStatus("rolling");
     }
 
     // ⚙️ CAMBIA MARCIA
     // ⏭️ TURNO SUCCESSIVO
-    public static PlayerClass nextTurn(List<PlayerClass> lista, int turno, boolean sortByPositionFirst) {
-        PlayerClass nextToRoll = null;
-        if (sortByPositionFirst) {
-            lista.sort(Comparator.comparingInt(player -> player.position));
-        }
+    public static PlayerClass nextTurn(List<PlayerClass> lista, int turno) {
         for (PlayerClass p : lista) {
             if (p.roll < 0 && p.turn == turno) {
-                nextToRoll = p;
-                break;
+                return p;
             }
         }
-        return nextToRoll;
+        return null;
     }
 
-    public static List<PlayerClass> sortByPositionAndUpdate(List<PlayerClass> lista, boolean gridPlacing) {
+    public static String nextTurnUid(List<PlayerClass> lista, int turno) {
+        PlayerClass p=nextTurn(lista,turno);
+        if(p!=null) return p.uid;
+        return "";
+    }
+
+    public static void calculateNewPositions(GameClass game, boolean gridPlacing) {
         if (gridPlacing) {
-            lista.sort(Comparator.comparingInt(player -> player.position));
             List<TrackCell> startingCells = new ArrayList<>();
             for (TrackCell cell : trackMap.getCells()) {
                 if (cell.getStart() > 0) {
@@ -60,7 +59,7 @@ public class GameManager {
             // Ordina per valore di start
             startingCells.sort(Comparator.comparingInt(TrackCell::getStart));
             int i = 0;
-            for (PlayerClass element : lista)
+            for (PlayerClass element : game.getPlayersSortedByPosition())
                 if (i < startingCells.size()) {
                     TrackCell startCell = startingCells.get(i);
                     element.row = startCell.getRow();
@@ -69,11 +68,12 @@ public class GameManager {
                     element.gear = 1;
                     element.roll = -1;
                     element.status="";
-                    //gamesRef.child("players").child(element.uid).setValue(element);//child("position").setValue(element.position);
                     i++;
+                    game.getPlayers().put(element.uid,element);
                 }
         } else {
             // TODO ORDINARE PER POSIZIONE SULLA PISTA
+            List<PlayerClass> lista=game.getPlayersSortedByPosition();
             lista.sort((p1, p2) -> {
                 TrackCell c1 = getTrackCellAt(p1.row, p1.column);
                 TrackCell c2 = getTrackCellAt(p2.row, p2.column);
@@ -84,21 +84,24 @@ public class GameManager {
                     return Integer.compare(c1.getPriority(), c2.getPriority()); // crescente
                 }
             });
+            int i=0;
             for (PlayerClass element : lista) {
                 element.turn++;
                 element.roll = -1;
                 element.status="";
+                element.position=++i;
+                game.getPlayers().put(element.uid,element);
             }
         }
-        return lista;
     }
 
-    public static List<PlayerClass> assignGridPositions(List<PlayerClass> lista) {
-        lista.sort((a, b) -> Integer.compare(b.roll, a.roll)); // decrescente
+    public static void assignGridPositions(GameClass game) {
+        List<PlayerClass> lista=game.getPlayersSortedByRoll();
         for (int i = 0; i < lista.size(); i++) {
             lista.get(i).position = i + 1;
+            game.getPlayers().put(lista.get(i).uid,lista.get(i));
         }
-        return sortByPositionAndUpdate(lista, true);
+        calculateNewPositions(game, true);
     }
 
     public static TrackMap getTrackMap() {

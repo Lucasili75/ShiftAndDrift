@@ -103,7 +103,7 @@ public class CurrentGameActivity extends AppCompatActivity {
                     }
                     // Controlla se sei l’host
                     isHost = thisGame.getHost().equals(MyApplication.getUid());
-                    overlay.setPlayers(thisGame.getPlayersList());
+                    overlay.setPlayers(thisGame.getPlayersSortedByPosition());
 
                     trackName = thisGame.getTrack();
                     if ((trackName != null) && (!trackName.isEmpty())) {
@@ -112,31 +112,43 @@ public class CurrentGameActivity extends AppCompatActivity {
                         loadTrack();
                     }
 
-                    currentPlayer = GameManager.nextTurn(thisGame.getPlayersList(), thisGame.getCurrentTurn(), true);
+                    currentPlayer = thisGame.getPlayerFromUid(thisGame.getCurrentPlayerUid());
 
                     if (currentPlayer != null) {
                         // imposto tutte le celle occupate dai giocatori
                         celleOccupate.clear();
-                        for (PlayerClass p : thisGame.getPlayersList())
+                        for (PlayerClass p : thisGame.getPlayers().values()) {
                             celleOccupate.add(GameManager.getTrackCellAt(p.row, p.column));
+                        }
                         overlay.setSelectedPlayer(currentPlayer);
                         marciaSelezionata = currentPlayer.gear;
 
                         // 👉 Se è un bot e tocca a lui, lo facciamo tirare
                         if (currentPlayer.isBot()) {
                             // Qualsiasi client può far tirare un bot se roll ancora assente
+                            switch (currentPlayer.status){
+                                case "":
+                                    int diceValue = GameManager.botAI.tiraDado(currentPlayer, GameManager.getTrackMap().getCells(), celleOccupate);
+                                    currentPlayer.roll = diceValue;
+                                    currentPlayer.gear = marciaSelezionata;
+                                    currentPlayer.status = "rolled";
+                                    dbManager.updatePlayerWithTransaction(currentPlayer);
+                                    updatePlayerCardContainer();
+                                    NumberPopup.showNumber(CurrentGameActivity.this, String.valueOf(diceValue));
+                            }
                             int diceValue = GameManager.botAI.tiraDado(currentPlayer, GameManager.getTrackMap().getCells(), celleOccupate);
                             TrackCell arrivo = GameManager.botAI.scegliArrivoBot(currentPlayer, diceValue, GameManager.getTrackMap().getCells(), celleOccupate);
                             if (arrivo != null) {
                                 currentPlayer.row = arrivo.getRow();
                                 currentPlayer.column = arrivo.getColumn();
-                                thisGame.updatePlayerArrayByUid(currentPlayer).updatePlayerMapFromArrayList();
+                                thisGame.updatePlayerMapByUid(currentPlayer);
+                                thisGame.setCurrentPlayerUid(GameManager.nextTurnUid(thisGame.getPlayersSortedByPosition(), thisGame.getCurrentTurn()));  // se next è a null vuol dire che il turno è finito, non aggiorno il next player, dovrebbe farlo tra poco nella endTurn
                                 dbManager.updateGame(thisGame);
                             } else {
                                 // NESSUNA POSIZIONE DI ARRIVO DOPO IL TIRO... IN TEORIA VUOL DIRE CHE IL BOT E' FUORI...
                             }
                         } else {
-                            if (!currentPlayer.uid.equals(MyApplication.getUid())) {
+                            if (!currentPlayer.itsMe()) {
                                 if (currentPlayer.status.equals("rolled")) {
                                     celleEvidenziate = new ArrayList<>(GameManager.calcolaTuttiGliArrivi(GameManager.getTrackCellAt(currentPlayer.row, currentPlayer.column), currentPlayer.roll, celleOccupate));
                                 }
@@ -167,29 +179,7 @@ public class CurrentGameActivity extends AppCompatActivity {
             // Dopo ogni gesto touch, aggiorniamo la matrice
             TrackCell selected = overlay.clickOnArrival(event);
             if (selected != null) {
-                TrackCell previous = GameManager.getTrackCellAt(currentPlayer.row, currentPlayer.column); // ad esempio, salvata prima del movimento
-
-                if (previous.getItemType() == CURVE &&
-                        selected.getItemType() != CURVE) {
-
-                    if (currentPlayer.getCurveStops() < previous.getRequiredStops()) {
-                        // Penalizza o avvisa!
-                        //currentPlayer.applyPenalty("Curva non rispettata");
-                    }
-
-                    currentPlayer.resetCurveStops(); // esce dalla curva, reset
-                }
-                if (selected.getItemType() == CURVE) {
-                    currentPlayer.incrementCurveStops();
-                } else {
-                    currentPlayer.resetCurveStops(); // se esce dalla curva, resetta il conteggio
-                }
-                currentPlayer.row = selected.getRow();
-                currentPlayer.column = selected.getColumn();
-                overlay.clearHighlightCells();
-                overlay.clearSelectedPlayer();
-                thisGame.updatePlayerMapFromArrayList();
-                dbManager.updateGame(thisGame);
+                sceltaPosizioneArrivo(selected);
             } else overlay.setTransformMatrix(imageView.getImageMatrixCopy());
             return false; // oppure true se gestisci tu i tocchi
         });
@@ -243,6 +233,31 @@ public class CurrentGameActivity extends AppCompatActivity {
         });
     }
 
+    private void sceltaPosizioneArrivo(TrackCell selected){
+        TrackCell previous = GameManager.getTrackCellAt(currentPlayer.row, currentPlayer.column); // ad esempio, salvata prima del movimento
+
+        if (previous.getItemType() == CURVE &&
+                selected.getItemType() != CURVE) {
+
+            if (currentPlayer.getCurveStops() < previous.getRequiredStops()) {
+                // Penalizza o avvisa!
+                //currentPlayer.applyPenalty("Curva non rispettata");
+            }
+
+            currentPlayer.resetCurveStops(); // esce dalla curva, reset
+        }
+        if (selected.getItemType() == CURVE) {
+            currentPlayer.incrementCurveStops();
+        } else {
+            currentPlayer.resetCurveStops(); // se esce dalla curva, resetta il conteggio
+        }
+        currentPlayer.row = selected.getRow();
+        currentPlayer.column = selected.getColumn();
+        overlay.clearHighlightCells();
+        overlay.clearSelectedPlayer();
+        thisGame.setCurrentPlayerUid(GameManager.nextTurnUid(thisGame.getPlayersSortedByPosition(), thisGame.getCurrentTurn()));
+        dbManager.updateGame(thisGame);
+    }
     private void removeListener() {
         if (eventListener != null) {
             dbManager.removeListener(eventListener);
@@ -286,8 +301,8 @@ public class CurrentGameActivity extends AppCompatActivity {
 
     private void endTurn() {
         handler.postDelayed(() -> {
-            GameManager.sortByPositionAndUpdate(thisGame.getPlayersList(), false);
-            thisGame.updatePlayerMapFromArrayList().newTurn();
+            GameManager.calculateNewPositions(thisGame, false);
+            thisGame.newTurn().setCurrentPlayerUid(GameManager.nextTurnUid(thisGame.getPlayersSortedByPosition(), thisGame.getCurrentTurn()));
             dbManager.updateGame(thisGame);
         }, 1500);
     }

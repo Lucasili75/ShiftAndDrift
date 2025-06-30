@@ -41,7 +41,7 @@ public class DbManager {
     // 🔧 CREA PARTITA
     public void createGame(String uid, String gameName) {
         String code = generateGameCode();
-        GameClass newGame = new GameClass(code, uid, gameName, "waiting", "", 0, 2, null);
+        GameClass newGame = new GameClass(code, uid, gameName, "waiting", "", 0, 2, null,null);
 
         gamesRef.child(code).setValue(newGame).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
@@ -59,13 +59,9 @@ public class DbManager {
         if (!game.iAmIn()) {
             player = new PlayerClass(MyApplication.getUid(), MainActivity.playerName, 1, 0, MainActivity.carColorFront, MainActivity.carColorRear, MainActivity.carColorBody);
             game.getPlayers().put(MyApplication.getUid(), player);
-            return updateGame(game, true);/*.addOnSuccessListener(unused -> {
-                MainActivity.checkAndNotify(gamesRef.getKey(), "");
-                navigateToGame(game.getCode(), MyApplication.getUid(), MainActivity.playerName, true, game.getStatus());
-            });*/
+            return updateGame(game, true);
         } else
             return null;
-        //navigateToGame(game.getCode(), MyApplication.getUid(), MainActivity.playerName, false, game.getStatus());
     }
 
     public Task<Void> updateGame(GameClass game) {

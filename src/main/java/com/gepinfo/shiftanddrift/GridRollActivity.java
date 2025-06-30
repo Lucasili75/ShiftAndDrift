@@ -37,6 +37,7 @@ public class GridRollActivity extends AppCompatActivity {
     DbManager dbManager;
     ValueEventListener eventListener;
     GameClass thisGame = new GameClass();
+    PlayerClass nextToRoll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +77,7 @@ public class GridRollActivity extends AppCompatActivity {
 
                     // Controlla se sei l’host
                     isHost = thisGame.getHost().equals(MyApplication.getUid());
-                    rolls.addAll(thisGame.getPlayersList());
+                    rolls.addAll(thisGame.getPlayersSortedByPosition());
                     String status = thisGame.getStatus();
                     if ((!isHost) && (status.equals("waiting"))) {
                         MainActivity.navigateToGame(GridRollActivity.this, gameCode, MyApplication.getUid(), MainActivity.playerName, false, status);
@@ -92,7 +93,7 @@ public class GridRollActivity extends AppCompatActivity {
                     playerRollsList.setAdapter(adapter);
                     adapter.notifyDataSetChanged();
                     // Trova il prossimo giocatore che deve ancora tirare
-                    PlayerClass nextToRoll = GameManager.nextTurn(rolls, -1, false);
+                    nextToRoll = GameManager.nextTurn(rolls, -1);
 
                     if (nextToRoll != null) {
                         // Se il prossimo giocatore da tirare sono io
@@ -140,8 +141,8 @@ public class GridRollActivity extends AppCompatActivity {
             int diceValue = DiceManager.tiraDado(99);
             NumberPopup.showNumber(this, String.valueOf(diceValue));
             handler.postDelayed(() -> {
-                thisGame.getMyPlayer().roll = diceValue;
-                thisGame.updatePlayerMapByUid(thisGame.getMyPlayer());
+                thisGame.getPlayerFromUid(nextToRoll.uid).roll = diceValue;
+                thisGame.updatePlayerMapByUid(nextToRoll);
                 dbManager.updateGame(thisGame);
             }, 1000);
         });
@@ -169,7 +170,9 @@ public class GridRollActivity extends AppCompatActivity {
         removeListener();
         handler.postDelayed(() -> {
             GameManager.loadTrackMap(thisGame.getTrack(), GridRollActivity.this);
-            thisGame.setArrayPlayer(GameManager.assignGridPositions(rolls)).updatePlayerMapFromArrayList().setCurrentTurn(0).setStatus("started");
+            GameManager.assignGridPositions(thisGame);
+            thisGame.setCurrentTurn(0).setStatus("started");
+            thisGame.setCurrentPlayerUid(thisGame.getPlayersSortedByPosition().get(0).uid);
             dbManager.updateGame(thisGame).addOnSuccessListener(unused -> {
                 MainActivity.checkAndNotify(thisGame.getCode(), "&senderUid=" + MyApplication.getUid());
                 MainActivity.navigateToGame(GridRollActivity.this, gameCode, MyApplication.getUid(), MainActivity.playerName, false, thisGame.getStatus());

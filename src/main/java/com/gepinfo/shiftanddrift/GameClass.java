@@ -5,9 +5,12 @@ import androidx.annotation.NonNull;
 import com.google.firebase.database.Exclude;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class GameClass {
     private String code;
@@ -41,14 +44,15 @@ public class GameClass {
     private int totalLaps;
 
     // ⚠️ Usa una mappa per evitare problemi di deserializzazione
-    private Map<String, PlayerClass> players = new HashMap<>();
-    private PlayerClass myPlayer = null;
+    private Map<String, PlayerClass> players = new LinkedHashMap<>();
+
+    private String currentPlayerUid = null;
 
     // 🔹 Costruttore vuoto richiesto da Firebase
     public GameClass() {
     }
 
-    public GameClass(String code, String host, String name, String status, String track, int currentTurn, int totalLaps, Map<String, PlayerClass> players) {
+    public GameClass(String code, String host, String name, String status, String track, int currentTurn, int totalLaps, Map<String, PlayerClass> players, String currentPlayerUid) {
         this.code = code;
         this.host = host;
         this.name = name;
@@ -57,6 +61,7 @@ public class GameClass {
         this.currentTurn = currentTurn;
         this.totalLaps = totalLaps;
         if (players != null) this.players = players;
+        this.currentPlayerUid = currentPlayerUid;
     }
 
     // 🔹 Getter normali
@@ -99,36 +104,6 @@ public class GameClass {
 
     public void setPlayers(Map<String, PlayerClass> players) {
         this.players = players;
-        this.arrayPlayer.clear();
-        for (Map.Entry<String, PlayerClass> entry : players.entrySet()) {
-            if (entry.getValue().uid.equals(MyApplication.getUid())) {
-                myPlayer = entry.getValue();
-            }
-            this.arrayPlayer.add(entry.getValue());
-        }
-    }
-
-    public GameClass setArrayPlayer(List<PlayerClass> arrayPlayer) {
-        this.arrayPlayer = arrayPlayer;
-        return this;
-    }
-
-    private List<PlayerClass> arrayPlayer = new ArrayList<>();
-
-    // 🔹 Metodo di utilità per ottenere una lista
-    @Exclude
-    public List<PlayerClass> getPlayersList() {
-        return arrayPlayer;
-    }
-
-    @Exclude
-    public GameClass updatePlayerArrayByUid(PlayerClass p) {
-        for (int index = 0; index < arrayPlayer.size(); index++)
-            if (arrayPlayer.get(index).uid.equals(p.uid)) {
-                arrayPlayer.set(index, p);
-                break;
-            }
-        return this;
     }
 
     @Exclude
@@ -138,11 +113,8 @@ public class GameClass {
     }
 
     @Exclude
-    public GameClass updatePlayerMapFromArrayList() {
-        for (PlayerClass element : arrayPlayer) {
-            players.put(element.uid, element);
-        }
-        return this;
+    public PlayerClass getPlayerFromUid(String uid) {
+        return players.get(uid);
     }
 
     // 🔹 Controlla se l'utente è nella partita
@@ -151,7 +123,6 @@ public class GameClass {
         String myUid = MyApplication.getUid();
         for (PlayerClass player : players.values()) {
             if (player.uid.equals(myUid)) {
-                myPlayer = player;
                 return true;
             }
         }
@@ -164,9 +135,39 @@ public class GameClass {
         return name + " - " + players.size() + " giocatori (" + MainActivity.getStatus(status) + ")";
     }
 
-    @Exclude
-    public PlayerClass getMyPlayer() {
-        return myPlayer;
+    public String getCurrentPlayerUid() {
+        return currentPlayerUid;
     }
 
+    public void setCurrentPlayerUid(String currentPlayerUid) {
+        this.currentPlayerUid = currentPlayerUid;
+    }
+
+    @Exclude
+    public List<PlayerClass> getPlayersSortedByPosition() {
+        return players.values().stream()
+                .sorted(Comparator.comparingInt(PlayerClass::getPosition))
+                .collect(Collectors.toList());
+    }
+
+    @Exclude
+    public List<PlayerClass> getPlayersSortedByName() {
+        return players.values().stream()
+                .sorted(Comparator.comparing(PlayerClass::getName))
+                .collect(Collectors.toList());
+    }
+
+    @Exclude
+    public List<PlayerClass> getPlayersSortedByRoll() {
+        return players.values().stream()
+                .sorted(Comparator.comparingInt(PlayerClass::getRoll).reversed())
+                .collect(Collectors.toList());
+    }
+
+    @Exclude
+    public List<PlayerClass> getPlayersShuffled() {
+        List<PlayerClass> shuffledList = new ArrayList<>(players.values());
+        Collections.shuffle(shuffledList);
+        return shuffledList;
+    }
 }

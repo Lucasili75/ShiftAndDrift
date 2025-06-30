@@ -24,7 +24,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
@@ -93,12 +92,12 @@ public class GameActivity extends AppCompatActivity {
                     }
                     // Controlla se sei l’host
                     isHost = thisGame.getHost().equals(MyApplication.getUid());
-                    for (PlayerClass player : thisGame.getPlayersList()) {
-                        if (player.isBot()) usedBotNames.add(player.getName());
+                    for (PlayerClass player : thisGame.getPlayers().values()) {
+                        if (player.isBot()) {
+                            usedBotNames.add(player.getName());
+                        }
                     }
-                    thisGame.getPlayersList().sort(Comparator.comparing(player -> player.name));
-                    thisGame.updatePlayerMapFromArrayList();
-                    playerAdapter = new PlayerListAdapter(GameActivity.this, thisGame.getPlayersList());
+                    playerAdapter = new PlayerListAdapter(GameActivity.this, thisGame.getPlayersSortedByName());
                     listViewPlayers.setAdapter(playerAdapter);
                     playerAdapter.notifyDataSetChanged();
 
@@ -166,7 +165,7 @@ public class GameActivity extends AppCompatActivity {
             MainActivity.toGameLobby(GameActivity.this);
         });
         listViewPlayers.setOnItemLongClickListener((parent, view, position, id) -> {
-            PlayerClass selected = thisGame.getPlayersList().get(position);
+            PlayerClass selected = thisGame.getPlayersSortedByName().get(position);
             if (!selected.isBot()) return true;
 
             new AlertDialog.Builder(this)

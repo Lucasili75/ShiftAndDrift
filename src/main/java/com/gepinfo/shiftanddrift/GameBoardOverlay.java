@@ -9,6 +9,7 @@ import android.graphics.Picture;
 import android.graphics.drawable.PictureDrawable;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -18,6 +19,7 @@ import java.util.List;
 
 public class GameBoardOverlay extends View {
 
+    private static final String TAG="GameBoardOverlay";
     private Paint paint;
     private List<TrackCell> cells = new ArrayList<>();
     private List<ImageView> cars = new ArrayList<>();
@@ -104,7 +106,7 @@ public class GameBoardOverlay extends View {
             float centerY = (float) cell.getPosY();
             float angle = (float) cell.getAngle();
 
-            if (player == currentPlayer && !blinkVisible) continue;
+            if ((currentPlayer!=null)&&(player.uid.equals(currentPlayer.uid) && !blinkVisible)) continue;
 
             PictureDrawable carDrawable = CarRenderer.renderCar(getContext(),
                     PlayerClass.colorHexMap.get(player.carColorFront),
@@ -152,6 +154,7 @@ public class GameBoardOverlay extends View {
             @Override
             public void run() {
                 blinkVisible = !blinkVisible;
+                Log.d(TAG,"blink:"+blinkVisible);
                 invalidate();
                 blinkHandler.postDelayed(this, BLINK_INTERVAL);
             }
