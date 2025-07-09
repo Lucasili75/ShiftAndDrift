@@ -1,18 +1,330 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>Shift & Drift WebApp</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1976d2">
+    <title>Shift & Drift WebApp</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="assets/icon-192.png">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js"></script>
+    
+    <!-- Modern CSS -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-  <h2>Shift & Drift - Registrazione Notifiche</h2>
-  <input id="uid" type="text" placeholder="Inserisci il tuo userId">
-  <button id="register">Registra per notifiche</button>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-title">
+                <i class="fas fa-racing-flag"></i>
+                Shift & Drift
+            </h1>
+            <div class="nav-actions">
+                <span id="playerNameDisplay" class="player-info"></span>
+                <button id="settingsBtn" class="icon-btn">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
 
-  <script src="firebase-config.js"></script>
-  <script src="app.js"></script>
+    <!-- Main Container -->
+    <main class="main-container">
+        
+        <!-- Main Menu Screen -->
+        <section id="mainMenu" class="screen active">
+            <div class="menu-container">
+                <div class="logo-section">
+                    <h2 class="game-title">Shift & Drift</h2>
+                    <p class="game-subtitle">Corri, rischia, vinci!</p>
+                </div>
+                
+                <div class="player-section">
+                    <div class="player-card">
+                        <h3 id="mainPlayerName">Giocatore: Player</h3>
+                        <div class="car-preview">
+                            <div class="car-icon">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="car-colors">
+                                <span class="color-dot" id="frontColor"></span>
+                                <span class="color-dot" id="bodyColor"></span>
+                                <span class="color-dot" id="rearColor"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="menu-actions">
+                    <button id="playBtn" class="primary-btn">
+                        <i class="fas fa-play"></i>
+                        Gioca
+                    </button>
+                    <button id="changeNameBtn" class="secondary-btn">
+                        <i class="fas fa-user-edit"></i>
+                        Cambia Nome
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Player Name Setup Screen -->
+        <section id="playerNameScreen" class="screen">
+            <div class="form-container">
+                <h2>Configura il tuo profilo</h2>
+                <form id="playerForm">
+                    <div class="input-group">
+                        <label for="playerNameInput">Nome Giocatore</label>
+                        <input type="text" id="playerNameInput" placeholder="Inserisci il tuo nome" maxlength="20" required>
+                    </div>
+                    
+                    <div class="color-section">
+                        <h3>Personalizza la tua auto</h3>
+                        <div class="car-customization">
+                            <div class="car-part">
+                                <label>Fronte</label>
+                                <select id="frontColorSelect" class="color-select">
+                                    <option value="Bianco">Bianco</option>
+                                    <option value="Rosso">Rosso</option>
+                                    <option value="Verde">Verde</option>
+                                    <option value="Blu">Blu</option>
+                                    <option value="Giallo">Giallo</option>
+                                    <option value="Nero">Nero</option>
+                                </select>
+                            </div>
+                            <div class="car-part">
+                                <label>Carrozzeria</label>
+                                <select id="bodyColorSelect" class="color-select">
+                                    <option value="Bianco">Bianco</option>
+                                    <option value="Rosso">Rosso</option>
+                                    <option value="Verde">Verde</option>
+                                    <option value="Blu">Blu</option>
+                                    <option value="Giallo">Giallo</option>
+                                    <option value="Nero">Nero</option>
+                                </select>
+                            </div>
+                            <div class="car-part">
+                                <label>Retro</label>
+                                <select id="rearColorSelect" class="color-select">
+                                    <option value="Bianco">Bianco</option>
+                                    <option value="Rosso">Rosso</option>
+                                    <option value="Verde">Verde</option>
+                                    <option value="Blu">Blu</option>
+                                    <option value="Giallo">Giallo</option>
+                                    <option value="Nero">Nero</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="car-preview-large">
+                            <div class="car-visual">
+                                <div class="car-front"></div>
+                                <div class="car-body"></div>
+                                <div class="car-rear"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" id="cancelPlayerBtn" class="secondary-btn">Annulla</button>
+                        <button type="submit" class="primary-btn">Salva</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Game Lobby Screen -->
+        <section id="gameLobby" class="screen">
+            <div class="lobby-container">
+                <div class="lobby-header">
+                    <h2>Lobby Partite</h2>
+                    <div class="lobby-actions">
+                        <button id="refreshGamesBtn" class="icon-btn">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button id="createGameBtn" class="primary-btn">
+                            <i class="fas fa-plus"></i>
+                            Crea Partita
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="games-section">
+                    <div id="gamesList" class="games-list">
+                        <div class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Caricamento partite...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Game Waiting Room -->
+        <section id="gameWaiting" class="screen">
+            <div class="waiting-container">
+                <div class="game-info">
+                    <h2 id="gameTitle">Nome Partita</h2>
+                    <p id="gameCode">Codice: XXXXX</p>
+                    <div class="game-status">
+                        <span id="gameStatus" class="status-badge">In attesa</span>
+                    </div>
+                </div>
+                
+                <div class="players-section">
+                    <h3>Giocatori <span id="playerCount">(0)</span></h3>
+                    <div id="playersList" class="players-list"></div>
+                </div>
+                
+                <div class="game-controls">
+                    <button id="startGameBtn" class="primary-btn hidden">
+                        <i class="fas fa-flag-checkered"></i>
+                        Inizia Gara
+                    </button>
+                    <button id="leaveGameBtn" class="danger-btn">
+                        <i class="fas fa-door-open"></i>
+                        Abbandona
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Grid Roll Screen -->
+        <section id="gridRoll" class="screen">
+            <div class="roll-container">
+                <h2>Determinazione Griglia</h2>
+                <p class="roll-instruction">Ogni giocatore tira i dadi per determinare la posizione di partenza</p>
+                
+                <div class="current-turn">
+                    <p id="turnInfo">In attesa del primo giocatore...</p>
+                </div>
+                
+                <div class="roll-section">
+                    <div class="dice-container">
+                        <div id="dice1" class="die">?</div>
+                        <div id="dice2" class="die">?</div>
+                    </div>
+                    <button id="rollDiceBtn" class="primary-btn disabled">
+                        <i class="fas fa-dice"></i>
+                        Tira i Dadi
+                    </button>
+                </div>
+                
+                <div class="standings-section">
+                    <h3>Griglia di Partenza</h3>
+                    <div id="gridStandings" class="grid-standings"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Active Game Screen -->
+        <section id="activeGame" class="screen">
+            <div class="game-container">
+                <div class="game-header">
+                    <h2 id="activeGameTitle">Gara in Corso</h2>
+                    <div class="game-stats">
+                        <span>Giro: <span id="currentLap">1</span>/<span id="totalLaps">2</span></span>
+                        <span>Turno: <span id="currentTurn">1</span></span>
+                    </div>
+                </div>
+                
+                <div class="track-container">
+                    <div id="raceTrack" class="race-track">
+                        <!-- Track will be dynamically generated -->
+                    </div>
+                </div>
+                
+                <div class="game-ui">
+                    <div class="current-player">
+                        <p id="currentPlayerInfo">È il turno di...</p>
+                    </div>
+                    
+                    <div class="player-controls">
+                        <div class="gear-section">
+                            <label>Marcia:</label>
+                            <select id="gearSelect" class="gear-select">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                            </select>
+                        </div>
+                        
+                        <button id="moveBtn" class="primary-btn disabled">
+                            <i class="fas fa-forward"></i>
+                            Muovi
+                        </button>
+                    </div>
+                    
+                    <div class="standings-mini">
+                        <h4>Classifica</h4>
+                        <div id="raceStandings" class="race-standings"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modals -->
+    <div id="createGameModal" class="modal">
+        <div class="modal-content">
+            <h3>Crea Nuova Partita</h3>
+            <form id="createGameForm">
+                <div class="input-group">
+                    <label for="gameNameInput">Nome Partita</label>
+                    <input type="text" id="gameNameInput" placeholder="Inserisci nome partita" maxlength="30" required>
+                </div>
+                <div class="input-group">
+                    <label for="totalLapsInput">Numero Giri</label>
+                    <select id="totalLapsInput">
+                        <option value="1">1 Giro</option>
+                        <option value="2" selected>2 Giri</option>
+                        <option value="3">3 Giri</option>
+                        <option value="5">5 Giri</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="secondary-btn close-modal">Annulla</button>
+                    <button type="submit" class="primary-btn">Crea</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p>Caricamento...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="utils.js"></script>
+    <script src="game-logic.js"></script>
+    <script src="app.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('firebase-messaging-sw.js')
+                .then(registration => console.log('SW registered:', registration))
+                .catch(error => console.log('SW registration failed:', error));
+        }
+    </script>
 </body>
 </html>

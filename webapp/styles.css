@@ -1,0 +1,946 @@
+/* ==============================================
+   SHIFT & DRIFT - Modern Racing Game CSS
+   ============================================== */
+
+/* CSS Variables */
+:root {
+    --primary-color: #1976d2;
+    --primary-dark: #1565c0;
+    --secondary-color: #ff5722;
+    --success-color: #4caf50;
+    --warning-color: #ff9800;
+    --danger-color: #f44336;
+    --dark-color: #212121;
+    --light-color: #f5f5f5;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --border-color: #e0e0e0;
+    --shadow: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-raised: 0 4px 8px rgba(0,0,0,0.15);
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+    
+    /* Car Colors */
+    --car-white: #ffffff;
+    --car-red: #f44336;
+    --car-green: #4caf50;
+    --car-blue: #2196f3;
+    --car-yellow: #ffeb3b;
+    --car-black: #212121;
+}
+
+/* Reset & Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Navigation */
+.navbar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.player-info {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Main Container */
+.main-container {
+    margin-top: 80px;
+    min-height: calc(100vh - 80px);
+    padding: 2rem;
+}
+
+/* Screen Management */
+.screen {
+    display: none;
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Buttons */
+.primary-btn, .secondary-btn, .danger-btn, .icon-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    box-shadow: var(--shadow);
+}
+
+.primary-btn {
+    background: var(--primary-color);
+    color: white;
+}
+
+.primary-btn:hover:not(.disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-raised);
+}
+
+.secondary-btn {
+    background: var(--light-color);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.secondary-btn:hover {
+    background: #eeeeee;
+    transform: translateY(-2px);
+}
+
+.danger-btn {
+    background: var(--danger-color);
+    color: white;
+}
+
+.danger-btn:hover {
+    background: #d32f2f;
+    transform: translateY(-2px);
+}
+
+.icon-btn {
+    padding: 0.75rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.icon-btn:hover {
+    background: var(--light-color);
+}
+
+.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Main Menu */
+.menu-container {
+    text-align: center;
+    max-width: 500px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius);
+    padding: 3rem 2rem;
+    box-shadow: var(--shadow-raised);
+}
+
+.logo-section {
+    margin-bottom: 2rem;
+}
+
+.game-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.game-subtitle {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.player-section {
+    margin: 2rem 0;
+}
+
+.player-card {
+    background: var(--light-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.car-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.car-icon {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.car-colors {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.color-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    display: inline-block;
+}
+
+.menu-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Player Name Screen */
+.form-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-raised);
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.input-group input, .color-select, .gear-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.input-group input:focus, .color-select:focus, .gear-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.color-section h3 {
+    margin: 2rem 0 1rem;
+    color: var(--text-primary);
+}
+
+.car-customization {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.car-part label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.car-preview-large {
+    display: flex;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+.car-visual {
+    display: flex;
+    align-items: center;
+    background: #f9f9f9;
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    border: 2px dashed #ddd;
+}
+
+.car-front, .car-body, .car-rear {
+    width: 30px;
+    height: 20px;
+    border-radius: 3px;
+    margin: 0 2px;
+    transition: var(--transition);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+/* Game Lobby */
+.lobby-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-raised);
+}
+
+.lobby-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.lobby-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.games-list {
+    min-height: 300px;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.loading-state i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.game-item {
+    background: var(--light-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.game-item:hover {
+    background: #eeeeee;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-raised);
+}
+
+.game-info h3 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.game-meta {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-waiting {
+    background: #e3f2fd;
+    color: var(--primary-color);
+}
+
+.status-rolling {
+    background: #fff3e0;
+    color: var(--warning-color);
+}
+
+.status-started {
+    background: #e8f5e8;
+    color: var(--success-color);
+}
+
+.status-finished {
+    background: #fce4ec;
+    color: var(--danger-color);
+}
+
+/* Game Waiting Room */
+.waiting-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-raised);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.game-info {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.game-info h2 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.players-section h3 {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.players-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.player-item {
+    background: var(--light-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.player-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.player-details h4 {
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.player-car-colors {
+    display: flex;
+    gap: 3px;
+}
+
+.player-car-colors .color-dot {
+    width: 12px;
+    height: 12px;
+}
+
+.game-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Grid Roll Screen */
+.roll-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-raised);
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.roll-instruction {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.current-turn {
+    background: var(--light-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 2rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+.dice-container {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.die {
+    width: 60px;
+    height: 60px;
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-primary);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.die.rolling {
+    animation: diceRoll 0.5s ease-in-out;
+}
+
+@keyframes diceRoll {
+    0%, 100% { transform: rotateX(0deg); }
+    50% { transform: rotateX(180deg); }
+}
+
+.standings-section {
+    margin-top: 2rem;
+    text-align: left;
+}
+
+.grid-standings {
+    background: var(--light-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+}
+
+.grid-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.grid-item:last-child {
+    border-bottom: none;
+}
+
+.grid-position {
+    font-weight: bold;
+    color: var(--primary-color);
+    min-width: 30px;
+}
+
+/* Active Game Screen */
+.game-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-raised);
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.game-stats {
+    display: flex;
+    gap: 2rem;
+    color: var(--text-secondary);
+}
+
+.track-container {
+    margin: 2rem 0;
+    overflow-x: auto;
+}
+
+.race-track {
+    min-width: 800px;
+    min-height: 400px;
+    background: #2d5e3d;
+    border-radius: var(--border-radius);
+    position: relative;
+    background-image: 
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 50px,
+            rgba(255,255,255,0.1) 50px,
+            rgba(255,255,255,0.1) 52px
+        );
+    border: 3px solid #1a4029;
+}
+
+.track-lane {
+    height: 60px;
+    border-bottom: 2px dashed rgba(255,255,255,0.3);
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+}
+
+.track-lane:last-child {
+    border-bottom: none;
+}
+
+.track-position {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    position: absolute;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+}
+
+.game-ui {
+    display: grid;
+    grid-template-columns: 1fr auto 250px;
+    gap: 2rem;
+    align-items: start;
+}
+
+.current-player {
+    background: var(--light-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    border-left: 4px solid var(--primary-color);
+}
+
+.player-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.gear-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.gear-select {
+    min-width: 80px;
+}
+
+.standings-mini {
+    background: var(--light-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+}
+
+.standings-mini h4 {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.race-standings {
+    font-size: 0.9rem;
+}
+
+.standing-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.standing-item:last-child {
+    border-bottom: none;
+}
+
+/* Modals */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.modal.active .modal-content {
+    transform: scale(1);
+}
+
+.modal h3 {
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.close-modal {
+    cursor: pointer;
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    top: 100px;
+    right: 2rem;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.toast {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1rem 1.5rem;
+    box-shadow: var(--shadow-raised);
+    border-left: 4px solid var(--primary-color);
+    max-width: 300px;
+    animation: slideInRight 0.3s ease;
+}
+
+.toast.success {
+    border-left-color: var(--success-color);
+}
+
+.toast.error {
+    border-left-color: var(--danger-color);
+}
+
+.toast.warning {
+    border-left-color: var(--warning-color);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 4000;
+    color: white;
+}
+
+.loading-overlay.hidden {
+    display: none;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-primary {
+    color: var(--primary-color);
+}
+
+.text-success {
+    color: var(--success-color);
+}
+
+.text-danger {
+    color: var(--danger-color);
+}
+
+.text-warning {
+    color: var(--warning-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-container {
+        padding: 1rem;
+    }
+    
+    .nav-container {
+        padding: 1rem;
+    }
+    
+    .nav-title {
+        font-size: 1.2rem;
+    }
+    
+    .form-container,
+    .menu-container,
+    .lobby-container,
+    .waiting-container,
+    .roll-container,
+    .game-container {
+        padding: 1.5rem;
+    }
+    
+    .car-customization {
+        grid-template-columns: 1fr;
+    }
+    
+    .game-ui {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .player-controls {
+        justify-content: center;
+    }
+    
+    .lobby-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .lobby-actions {
+        justify-content: center;
+    }
+    
+    .game-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .toast-container {
+        right: 1rem;
+        left: 1rem;
+    }
+    
+    .toast {
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .menu-actions {
+        gap: 0.5rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .car-colors {
+        justify-content: center;
+    }
+}
